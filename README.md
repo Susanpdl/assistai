@@ -1,8 +1,4 @@
-# AssistAI — AI Classroom Interaction Platform
-
-A polished **frontend UI/UX prototype** for an AI-assisted classroom platform. It gives every
-student a personal teaching assistant grounded in their actual course material, and gives
-professors a live window into how the whole room is doing.
+# AssistAI: AI Classroom Interaction Platform
 
 > **Status:** Frontend prototype only. All data is mocked (`src/data/mock.js`) so the three
 > experiences can be demoed end to end. The backend (FastAPI · Postgres/pgvector · Redis ·
@@ -10,24 +6,6 @@ professors a live window into how the whole room is doing.
 
 ---
 
-## Run it
-
-```bash
-npm install
-npm run dev
-```
-
-Then open the URL Vite prints (e.g. `http://localhost:5173`). A **floating "Demo" switcher** at
-the bottom of the screen lets you jump between the three views — perfect for a walkthrough.
-
-Build a static version to host/share:
-
-```bash
-npm run build      # outputs to dist/
-npm run preview    # serve the production build locally
-```
-
----
 
 ## The three views
 
@@ -42,22 +20,10 @@ instructor tabs (Dashboard / Questions / Live session / Upload content / Student
 
 ---
 
-## Architecture diagram (editable)
+## Architecture diagram
 
 The full system architecture is in [`docs/architecture.mmd`](docs/architecture.mmd) (Mermaid).
 
-- **Editable link (no account needed):** open `docs/architecture-link.txt` and paste the
-  `mermaid.live/edit#...` URL into your browser. The entire diagram is encoded in the link, so you
-  (or your professor) can edit it live and re-share.
-- **Want editable Excalidraw shapes?** Go to <https://excalidraw.com>, open the command menu, choose
-  **"Mermaid to Excalidraw"**, and paste the contents of `docs/architecture.mmd`. It converts the
-  diagram into fully editable shapes on the canvas.
-
-The diagram maps the five logical layers — Client (React) → API Gateway (FastAPI) → Realtime
-(WebSockets + Redis pub/sub) → AI Subsystem (LangGraph + RAG + Claude) → Persistence
-(Postgres/pgvector, Redis, object storage) — plus the async ingestion worker.
-
----
 
 ## Project structure
 
