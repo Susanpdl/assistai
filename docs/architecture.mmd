@@ -1,0 +1,82 @@
+%% AssistAI Classroom — System Architecture
+%% Paste into https://mermaid.live to edit, or render with any Mermaid tool.
+flowchart TB
+  subgraph CLIENT["1 · Client Layer — React SPA"]
+    direction LR
+    V1["Student<br/>Async Study"]
+    V2["Student<br/>In-Class Live"]
+    V3["Instructor<br/>Console"]
+  end
+
+  subgraph GW["2 · API Gateway — FastAPI"]
+    AUTH["Auth &amp; RBAC<br/>(student / instructor)"]
+    REST["REST routes"]
+    WSO["WebSocket endpoint"]
+  end
+
+  subgraph RT["3 · Realtime Layer"]
+    CM["Connection Manager<br/>(rooms / broadcast)"]
+    PS["Redis Pub/Sub<br/>(cross-instance)"]
+  end
+
+  subgraph AI["4 · AI Subsystem"]
+    LG["LangGraph Orchestrator<br/>(intent classify + route)"]
+    RAG["RAG Retrieval<br/>(vector search)"]
+    TOOLS["Tools<br/>(quiz, progress, history)"]
+    CLAUDE["Claude API<br/>(grounded generation)"]
+  end
+
+  subgraph DATA["5 · Persistence Layer"]
+    PG[("Postgres + pgvector<br/>users, courses, messages,<br/>activities + embeddings")]
+    REDIS[("Redis<br/>cache + pub/sub")]
+    OBJ[("Object Storage<br/>uploaded files")]
+  end
+
+  ING["Async Ingestion Worker<br/>chunk → embed → index"]
+
+  %% Client to gateway
+  V1 -->|REST / question| REST
+  V3 -->|REST / upload| REST
+  V2 <-->|WebSocket| WSO
+
+  %% Gateway internal
+  REST --> AUTH
+  WSO --> CM
+
+  %% AI flow
+  REST -->|student question| LG
+  LG -->|retrieve path| RAG
+  LG -->|tool path| TOOLS
+  LG -->|escalate path| CM
+  RAG --> PG
+  RAG --> CLAUDE
+  CLAUDE -->|grounded answer + citation| REST
+
+  %% Realtime
+  CM <--> PS
+  PS <--> REDIS
+  CM -->|poll / results| V2
+
+  %% Persistence wiring
+  AUTH --> PG
+  REST --> PG
+  TOOLS --> PG
+
+  %% Ingestion pipeline
+  V3 -->|file upload| OBJ
+  OBJ --> ING
+  ING -->|vectors| PG
+
+  classDef client fill:#efedff,stroke:#6d5efc,color:#1a1c2b;
+  classDef gw fill:#e8f0ff,stroke:#2f6bff,color:#1a1c2b;
+  classDef rt fill:#e6f7ee,stroke:#18a957,color:#1a1c2b;
+  classDef ai fill:#fff4e6,stroke:#f59e0b,color:#1a1c2b;
+  classDef data fill:#f4f4f8,stroke:#868aa0,color:#1a1c2b;
+  classDef worker fill:#fdeceb,stroke:#f25f5c,color:#1a1c2b;
+
+  class V1,V2,V3 client;
+  class AUTH,REST,WSO gw;
+  class CM,PS rt;
+  class LG,RAG,TOOLS,CLAUDE ai;
+  class PG,REDIS,OBJ data;
+  class ING worker;
