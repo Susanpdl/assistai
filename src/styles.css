@@ -560,3 +560,50 @@ input, textarea { font-family: inherit; }
   .sidebar { display: none; }
   .switcher__label { display: none; }
 }
+
+/* ---- Auth: login screen + account bar ---- */
+.app--center { align-items: center; justify-content: center; }
+
+.login {
+  height: 100vh; display: grid; place-items: center;
+  background: var(--surface-2); padding: 24px;
+}
+.login__card {
+  width: 100%; max-width: 380px; background: var(--surface);
+  border: 1px solid var(--line-strong); border-radius: var(--radius-lg);
+  padding: 36px 32px; box-shadow: var(--shadow);
+}
+.login__brand {
+  font-weight: 600; letter-spacing: -0.02em; color: var(--ink);
+  font-size: 17px; margin-bottom: 24px;
+}
+.login__title {
+  font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
+  color: var(--ink); margin: 0 0 6px;
+}
+.login__sub { font-size: 14px; color: var(--ink-soft); line-height: 1.6; margin: 0 0 22px; }
+.login__field { display: block; margin-bottom: 18px; }
+.login__field span {
+  display: block; font-size: 13px; font-weight: 500;
+  color: var(--ink-soft); margin-bottom: 7px;
+}
+.login__field input {
+  width: 100%; box-sizing: border-box; padding: 10px 12px;
+  font-size: 14.5px; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line-strong); border-radius: var(--radius);
+  transition: border-color 0.14s ease;
+}
+.login__field input:focus { outline: none; border-color: var(--ink); }
+.login__field input::placeholder { color: var(--muted); }
+.login__submit { width: 100%; padding: 10px 14px; font-size: 14px; cursor: pointer; }
+.login__submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.login__error { font-size: 13px; color: var(--ink); margin: 0 0 16px; }
+
+.account-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px; border-bottom: 1px solid var(--line);
+  background: var(--surface); font-size: 13px;
+}
+.account-bar__id { color: var(--ink-soft); }
+.account-bar__role { text-transform: capitalize; color: var(--muted); }
+.account-bar__logout { padding: 5px 12px; font-size: 12px; cursor: pointer; }

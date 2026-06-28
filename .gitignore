@@ -5,3 +5,8 @@ dist/
 .vite/
 .claude/
 .netlify/
+
+# Local env (frontend). Committed template lives in .env.example.
+.env
+.env.local
+.env.*.local
