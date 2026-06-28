@@ -5,6 +5,7 @@ imported somewhere; importing them here (and re-exporting) is that single place.
 """
 
 from app.models.announcements import Announcement, Comment
+from app.models.auth import LoginToken
 from app.models.base import Base
 from app.models.content import Chunk, Document
 from app.models.courses import Course, Enrollment
@@ -20,6 +21,7 @@ from app.models.sessions import (
 __all__ = [
     "Base",
     "User",
+    "LoginToken",
     "Course",
     "Enrollment",
     "Session",

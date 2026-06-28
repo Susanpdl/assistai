@@ -1,0 +1,75 @@
+"""Shared pytest fixtures for the auth integration tests.
+
+These tests run against the real docker-compose Postgres + Redis (they exercise the full
+session/token path), so the stack must be up. We isolate by using a dedicated email
+domain and cleaning up those rows after each test.
+"""
+
+import re
+
+import pytest
+from fastapi.testclient import TestClient
+
+from app.auth.email import get_email_sender
+from app.config import settings
+from app.db import SessionLocal
+from app.main import app
+from app.models.auth import LoginToken
+from app.models.identity import User
+
+# A normal (non special-use) domain so EmailStr validation passes; `.local` would be
+# rejected by email-validator. No real mail is sent — the email backend is a fake.
+TEST_DOMAIN = "assistai-test.com"
+
+
+class CapturingSender:
+    """Stand-in email sender that records what would have been sent."""
+
+    def __init__(self) -> None:
+        self.sent: list[dict] = []
+
+    def send(self, to: str, subject: str, body: str) -> None:
+        self.sent.append({"to": to, "subject": subject, "body": body})
+
+    def last_token(self) -> str | None:
+        if not self.sent:
+            return None
+        match = re.search(r"token=([A-Za-z0-9_\-]+)", self.sent[-1]["body"])
+        return match.group(1) if match else None
+
+
+@pytest.fixture(autouse=True)
+def relax_rate_limits(monkeypatch):
+    """Don't let the per-IP rate limiter (shared host in tests) trip across cases."""
+    monkeypatch.setattr(settings, "auth_request_max_per_window", 10_000)
+
+
+@pytest.fixture(autouse=True)
+def cleanup_test_rows():
+    yield
+    db = SessionLocal()
+    try:
+        db.query(LoginToken).filter(LoginToken.email.like(f"%@{TEST_DOMAIN}")).delete(
+            synchronize_session=False
+        )
+        db.query(User).filter(User.email.like(f"%@{TEST_DOMAIN}")).delete(
+            synchronize_session=False
+        )
+        db.commit()
+    finally:
+        db.close()
+
+
+@pytest.fixture
+def sender():
+    """Override the email dependency with a capturing sender for the duration of a test."""
+    capturing = CapturingSender()
+    app.dependency_overrides[get_email_sender] = lambda: capturing
+    yield capturing
+    app.dependency_overrides.pop(get_email_sender, None)
+
+
+@pytest.fixture
+def client():
+    # Don't auto-follow the post-login redirect (it points at the frontend origin).
+    return TestClient(app, follow_redirects=False)
