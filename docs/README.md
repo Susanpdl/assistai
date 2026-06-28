@@ -17,6 +17,7 @@ then build to match them, and we keep them updated as we go.
 | [`03-development-plan.md`](03-development-plan.md) | The phases we build in, our working method, and the "definition of done." |
 | [`04-ui-guidelines.md`](04-ui-guidelines.md) | The minimal design system every screen must follow, so the UI stays consistent. |
 | [`05-testing-strategy.md`](05-testing-strategy.md) | How we test each phase and where we record test results. |
+| [`06-challenges.md`](06-challenges.md) | A running log of problems we hit during development and how we solved them. |
 | [`features/`](features/) | One document per feature: what it is, what's done, what's left, and how it works. |
 | [`testing/`](testing/) | A test log per feature — every test we run gets written down here. |
 | [`architecture.mmd`](architecture.mmd) | The editable system diagram (Mermaid). See `architecture-link.txt` for an editable link. |
