@@ -139,3 +139,25 @@ Each entry follows the same shape: **Symptom** (what we saw) → **Root cause** 
   include` on the client, specific-origin + `allow-credentials` on the server, and a
   `SameSite`/site arrangement that permits the cookie. Verify all three before assuming the
   login flow is broken.
+
+### C9 · Magic links never printed — frontend on IPv6, API on IPv4
+
+- **Symptom:** Clicking "Send me a link" in the browser produced nothing in the uvicorn console
+  — no link, not even a request log line. The backend looked dead, but a direct `curl` to it
+  worked fine and printed the link.
+- **Root cause:** Same `localhost` IPv4/IPv6 split as the Postgres issue (C3), now on the API.
+  Vite serves the page on IPv6 (`[::1]:5173`), so the browser uses IPv6 for `localhost` — and
+  called the API at `[::1]:8000`. But uvicorn's default binds **IPv4 only** (`127.0.0.1:8000`),
+  so the request hit nothing and failed in the browser before ever reaching the backend (hence
+  zero request logs and zero tokens created). `curl localhost:8000` worked only because curl
+  falls back to IPv4. *(Confirmed: `[::1]:8000/health` → connection refused; `127.0.0.1:8000` →
+  200.)*
+- **Fix:** Run uvicorn on IPv6 localhost so it matches the browser:
+  `uv run uvicorn app.main:app --reload --host ::`. Now `localhost:8000` resolves to `[::1]:8000`
+  for both the browser and the API, keeping page and API on the same `localhost` (so the
+  `SameSite=Lax` session cookie still flows). Updated `backend/README.md` accordingly.
+- **Also seen:** two Vite dev servers were running (`:5173` and `:5174`) — leftovers from
+  repeated `npm run dev`. Harmless, but kill the extra to avoid testing the wrong tab.
+- **Takeaway:** When a browser request "vanishes" (no server log at all), it failed at the
+  network layer, not in your code. On macOS, `localhost` is dual IPv4/IPv6 — make the client and
+  server agree on a family. A request that works via `curl` but not the browser is a strong tell.

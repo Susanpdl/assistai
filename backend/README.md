@@ -38,7 +38,9 @@ docker compose up -d
 uv run alembic upgrade head
 
 # 5. Run the API (http://localhost:8000, docs at /docs)
-uv run uvicorn app.main:app --reload
+# `--host ::` binds IPv6 localhost — the Vite dev server and browser use IPv6 for
+# `localhost`, so the API must listen there too or the frontend's calls never arrive.
+uv run uvicorn app.main:app --reload --host ::
 ```
 
 Check it's alive:
