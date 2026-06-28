@@ -1,0 +1,33 @@
+# Local development infrastructure for the AssistAI backend.
+# Brings up Postgres (with pgvector) and Redis. Run: `docker compose up -d`.
+services:
+  db:
+    # pgvector/pgvector ships Postgres with the vector extension already available.
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: assistai
+      POSTGRES_PASSWORD: assistai
+      POSTGRES_DB: assistai
+    ports:
+      # Host 5433 -> container 5432, to avoid clashing with a local Postgres on 5432.
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U assistai"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
