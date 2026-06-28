@@ -98,4 +98,7 @@ Phase 0 ─┬─ Phase 1 ─┬─ Phase 2 ─┬─ Phase 3 ── Phase 4 ⭐
 - ✅ Minimal monochrome design system applied and documented.
 - ✅ Architecture diagram + editable link.
 - ✅ This documentation set.
-- ⏭️ **Next:** Phase 0 — backend scaffold + schema (on your go-ahead).
+- ✅ **Phase 0** — backend scaffold (FastAPI + Postgres/pgvector + Redis) + full schema + migrations.
+- ✅ **Phase 1** — magic-link auth (Redis sessions, role guards, email sender) + login gate.
+- ✅ **Phase 2** — courses & enrollment (join-code, approve/reject + emails, access gating) + Courses UI.
+- ⏭️ **Next:** Phase 3 — Course Content & Ingestion (upload → chunk → embed → pgvector).

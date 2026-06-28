@@ -42,8 +42,20 @@ other feature asks it before showing course data.)*
 
 ## Status
 - ✅ Done: design.
-- 🚧 In progress: the instructor console UI prototype hints at this but isn't wired.
-- ⏳ Remaining: course creation, request/decision endpoints, gating logic, both UIs.
+- ✅ Done: build (2026-06-28) — course creation (`POST /courses`), join-code enrollment
+  (`POST /courses/enroll`), approve/reject (`POST /enrollments/{id}/decision`) with student
+  email on each decision, role-aware `GET /courses`, owner-only request listing, and the
+  `require_course_access` gate (owner or approved student). New minimal real Courses screens for
+  both roles (separate from the mock demo views). Tests green (8 new / 17 total) — see
+  `testing/enrollment-approval.md`.
+- ⏳ Remaining: surface this inside the polished instructor-console prototype later (Phase 8).
+
+## Notes from build
+- **Enroll by join code** (not `/courses/{id}/enroll`) since discovery is a join code, not a
+  browsable list. Bad code → 404.
+- **Re-request after rejection** flips the existing rejected row back to `pending` (keeps the
+  unique `(student_id, course_id)` constraint intact instead of inserting a duplicate).
+- A student's `GET /courses` hides the `join_code`; only the owner sees it.
 
 ## Tests
 Log: `testing/enrollment-approval.md`. Key cases:

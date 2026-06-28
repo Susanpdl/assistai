@@ -10,7 +10,7 @@ overall approach.
 |---------|-----|--------|
 | UI prototype (current) | this file (below) | ✅ Build + manual verification passing |
 | Auth (magic link) | `auth-magic-link.md` | ✅ 9/9 passing (2026-06-28) |
-| Enrollment & approval | `enrollment-approval.md` | ⏳ not started |
+| Enrollment & approval | `enrollment-approval.md` | ✅ 8/8 passing (2026-06-28) |
 | Content & ingestion | `content-ingestion.md` | ⏳ not started |
 | AI tutor | `ai-tutor.md` | ⏳ not started |
 | Live sessions & polls | `live-sessions-polls.md` | ⏳ not started |
