@@ -103,3 +103,39 @@ Each entry follows the same shape: **Symptom** (what we saw) → **Root cause** 
   folder as the workspace root). No code change needed.
 - **Takeaway:** "Import could not be resolved" in the editor ≠ a real import error. Verify with
   an actual run/test first; if green, it's an interpreter-selection issue.
+
+---
+
+## Phase 1 · Identity & Access (magic-link auth)
+
+### C7 · Email validation rejected our test addresses
+
+- **Symptom:** Every auth test failed with `422 Unprocessable Entity` on `POST /auth/request`.
+  The endpoint validates the body with Pydantic's `EmailStr`, and our test emails (e.g.
+  `user@phase1test.local`) were being rejected.
+- **Root cause:** `EmailStr` uses the `email-validator` library, which rejects `.local` because
+  it's a **special-use / reserved** domain (RFC 6762) — not a real, deliverable address. Normal
+  domains like `gmail.com` passed fine. *(The app was behaving correctly; our fake test data
+  just wasn't a valid email.)*
+- **Fix:** Switched the test domain to a normal one (`assistai-test.com`). No mail is actually
+  sent in tests (the email sender is a capturing fake), so any syntactically valid domain works.
+- **Takeaway:** When a validation layer rejects test fixtures, check whether the *fixture* is
+  invalid before suspecting the code. Reserved TLDs (`.local`, `.invalid`, `.example`) can trip
+  strict validators.
+
+### C8 · Cross-origin cookies need credentialed CORS (and same-site URLs)
+
+- **Symptom (anticipated):** A browser SPA on `localhost:5173` calling the API on
+  `localhost:8000` won't send/receive the session cookie unless CORS is configured for
+  *credentials* — a very common "I'm logged in on the server but the frontend says 401" bug.
+- **Root cause:** Browsers drop cookies on cross-origin XHR unless the request uses
+  `credentials: 'include'` AND the server responds with a specific
+  `Access-Control-Allow-Origin` (not `*`) plus `Access-Control-Allow-Credentials: true`.
+- **Fix:** Backend CORS lists the exact frontend origin with `allow_credentials=True`; the
+  frontend's fetch wrapper sets `credentials: 'include'`. Verified with a curl preflight +
+  credentialed request. (It also helps that `localhost:5173` and `localhost:8000` are the same
+  *site*, so the `SameSite=Lax` cookie is sent.)
+- **Takeaway:** Cookie-based auth across origins has three required pieces — `credentials:
+  include` on the client, specific-origin + `allow-credentials` on the server, and a
+  `SameSite`/site arrangement that permits the cookie. Verify all three before assuming the
+  login flow is broken.

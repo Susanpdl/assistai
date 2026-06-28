@@ -52,8 +52,18 @@ couldn't use stored tokens to log in — same reason we'd hash passwords.)*
 
 ## Status
 - ✅ Done: design.
-- ⏳ Remaining: everything (build) — email provider wiring, token flow, session middleware, login UI,
-  role guards.
+- ✅ Done: build (2026-06-28) — token flow (hashed, single-use, 15-min expiry), server-side
+  sessions in Redis via httpOnly cookie, `/auth/request|verify|logout|me`, per-email/per-IP rate
+  limit, instructor-email allowlist, role guards (`require_role`), swappable email sender
+  (console dev backend + Resend behind `EMAIL_BACKEND=resend`), and the React login UI gated in
+  front of the app. Tests green (9/9) — see `testing/auth-magic-link.md`.
+- ⏳ Remaining: wire a real Resend key for production email; visual browser click-through.
+
+## Decisions made during build
+- **Session mechanism:** server-side sessions in Redis + httpOnly cookie (not stateless JWT), so
+  logout is a true invalidation.
+- **Session lifetime:** 14 days ("remember me" default).
+- **Email provider:** console sender for dev (logs the link), Resend behind an env var.
 
 ## Tests
 Log: `testing/auth-magic-link.md`. Key cases:
