@@ -55,3 +55,16 @@ def send_magic_link(sender: EmailSender, to: str, link: str) -> None:
         "If you didn't request this, you can ignore this email."
     )
     sender.send(to=to, subject="Your AssistAI sign-in link", body=body)
+
+
+def send_enrollment_decision(sender: EmailSender, to: str, course_name: str, approved: bool) -> None:
+    if approved:
+        subject = f"You're enrolled in {course_name}"
+        body = f"Your request to join {course_name} was approved. You now have access in AssistAI."
+    else:
+        subject = f"Update on your {course_name} enrollment request"
+        body = (
+            f"Your request to join {course_name} was not approved. "
+            "You can request again if you think this was a mistake."
+        )
+    sender.send(to=to, subject=subject, body=body)

@@ -10,11 +10,14 @@ import re
 import pytest
 from fastapi.testclient import TestClient
 
+from sqlalchemy import or_
+
 from app.auth.email import get_email_sender
 from app.config import settings
 from app.db import SessionLocal
 from app.main import app
 from app.models.auth import LoginToken
+from app.models.courses import Course, Enrollment
 from app.models.identity import User
 
 # A normal (non special-use) domain so EmailStr validation passes; `.local` would be
@@ -49,6 +52,23 @@ def cleanup_test_rows():
     yield
     db = SessionLocal()
     try:
+        test_user_ids = [
+            u.id for u in db.query(User).filter(User.email.like(f"%@{TEST_DOMAIN}")).all()
+        ]
+        if test_user_ids:
+            course_ids = [
+                c.id for c in db.query(Course).filter(Course.owner_id.in_(test_user_ids)).all()
+            ]
+            # Delete in FK order: enrollments -> courses -> tokens -> users.
+            db.query(Enrollment).filter(
+                or_(
+                    Enrollment.student_id.in_(test_user_ids),
+                    Enrollment.course_id.in_(course_ids) if course_ids else False,
+                )
+            ).delete(synchronize_session=False)
+            db.query(Course).filter(Course.owner_id.in_(test_user_ids)).delete(
+                synchronize_session=False
+            )
         db.query(LoginToken).filter(LoginToken.email.like(f"%@{TEST_DOMAIN}")).delete(
             synchronize_session=False
         )

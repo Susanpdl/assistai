@@ -12,6 +12,7 @@ from sqlalchemy import text
 
 from app.auth.router import router as auth_router
 from app.config import settings
+from app.courses.router import router as courses_router
 from app.db import engine
 
 app = FastAPI(title="AssistAI API", version="0.1.0")
@@ -25,6 +26,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(courses_router)
 
 
 @app.get("/health")
