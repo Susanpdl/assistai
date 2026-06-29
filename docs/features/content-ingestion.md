@@ -48,8 +48,14 @@ knowledge)*:
 - Handle failures: mark `failed`, show it, allow retry.
 
 ## Status
-- ✅ Done: design; the upload UI exists in the prototype (mock statuses).
-- ⏳ Remaining: storage wiring, the worker (extract/chunk/embed/store), real status updates, delete.
+- ✅ **Done (Phase 3):** storage seam (local-disk backend), Redis queue + standalone worker,
+  pipeline (extract PDF/DOCX/PPTX/TXT → overlapping chunks → embed → pgvector), real status
+  transitions (`processing` → `indexed`/`failed`), upload/list/delete/reindex API, file-type/size
+  validation, course-scoped chunks (NFR-5), and the instructor upload UI wired to the live API.
+  Tests: `testing/content-ingestion.md` (9 new, 26 total).
+- ⏳ **Deferred to Phase 4:** the real embedding model (dev/tests use the deterministic
+  `LocalEmbedder`); retrieval *use* of these chunks by the tutor.
+- ⏳ **Later:** swap local-disk storage for S3/GCS in deployment.
 
 ## Tests
 Log: `testing/content-ingestion.md`. Key cases:

@@ -101,4 +101,9 @@ Phase 0 ─┬─ Phase 1 ─┬─ Phase 2 ─┬─ Phase 3 ── Phase 4 ⭐
 - ✅ **Phase 0** — backend scaffold (FastAPI + Postgres/pgvector + Redis) + full schema + migrations.
 - ✅ **Phase 1** — magic-link auth (Redis sessions, role guards, email sender) + login gate.
 - ✅ **Phase 2** — courses & enrollment (join-code, approve/reject + emails, access gating) + Courses UI.
-- ⏭️ **Next:** Phase 3 — Course Content & Ingestion (upload → chunk → embed → pgvector).
+- ✅ **Phase 3** — Course Content & Ingestion: storage seam + Redis queue + worker; extract
+  (PDF/DOCX/PPTX/TXT) → chunk → embed → pgvector; upload/list/delete/reindex API with status
+  (`processing`/`indexed`/`failed`); course-scoped chunks (NFR-5); instructor upload UI wired live.
+  *(Real embedding model + tutor retrieval deferred to Phase 4; deterministic `LocalEmbedder` for now.)*
+- ⏭️ **Next:** Phase 4 — AI Tutor (RAG + guardrails): grounded Q&A with citations over the indexed
+  chunks, Socratic guardrails, escalation. ⭐ core slice.
