@@ -70,10 +70,13 @@ without changing the model.
 | Replay an old code | Code validated against the session's *current* time window |
 
 ## Status
-- ✅ Done: design (rule + mechanisms).
-- ⏳ Remaining: rotating-code generator + validator, check-in endpoint, device binding, poll-match
-  finalization, instructor code display + attendance view, student check-in UI. **No UI exists yet**
-  (this is a new screen for both roles).
+- ✅ **Done (Phase 6):** HMAC time-based rotating-code generator + validator (with grace window),
+  check-in endpoint, device binding (one account/device/session), poll-match present rule, finalize
+  on session end, instructor code display + live attendance roster, and student check-in UI. API:
+  `GET /sessions/{id}/attendance/code`, `POST /sessions/{id}/attendance/checkin`,
+  `GET /sessions/{id}/attendance`. Tests: `testing/attendance.md` (6 new, 43 total).
+- ⏳ **Deferred:** proximity proofs (GPS/Bluetooth) for the native app; a sturdier device id than the
+  per-browser one used on web.
 
 ## Tests
 Log: `testing/attendance.md`. Key cases:

@@ -114,5 +114,8 @@ Phase 0 ─┬─ Phase 1 ─┬─ Phase 2 ─┬─ Phase 3 ── Phase 4 ⭐
   manager with Redis pub/sub relay (scale-safe), connected-count via a shared Redis set, session
   start/end, poll push + live aggregation + instructor reveal, role-aware delivery, one-answer-per-
   student. HTTP: start/end session, push poll, reveal, results, active-session.
-- ⏭️ **Next:** Phase 6 — Attendance (rotating code + code/poll rule + device binding + instructor
-  attendance view), built on sessions and reusing poll responses.
+- ✅ **Phase 6** — Attendance: HMAC time-based rotating code (+grace), check-in with device binding
+  (one account/device/session), the code+poll present rule reusing Phase 5 responses, finalize on
+  end, instructor code display + live roster, student check-in UI. API: code / checkin / attendance.
+- ⏭️ **Next:** Phase 7 — Announcements & Notifications (post text announcements, email enrolled
+  students, student comments), reusing the Phase 1 email infrastructure.
