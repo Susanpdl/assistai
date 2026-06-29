@@ -3,6 +3,7 @@
 // StudentLive: see "live", answer the pushed poll, see results once revealed.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import * as live from '../api/live.js'
+import * as attendance from '../api/attendance.js'
 import ResultBars from '../components/ResultBars.jsx'
 
 function tallyToBars(activity, results) {
@@ -83,6 +84,8 @@ export function InstructorLive({ courseId }) {
         <span className="live-dot" /> Live · {connected} student{connected === 1 ? '' : 's'} connected
         <button className="btn btn--ghost" style={{ marginLeft: 'auto' }} onClick={end}>End</button>
       </div>
+
+      <AttendanceInstructor sessionId={session.id} />
 
       {!activity && (
         <div className="card" style={{ marginTop: 8 }}>
@@ -183,6 +186,8 @@ export function StudentLive({ courseId }) {
         <span><strong>Class is live</strong> — {connected} connected</span>
       </div>
 
+      <AttendanceStudent sessionId={session.id} />
+
       {!activity && <p className="courses__empty">Waiting for the instructor to push a poll…</p>}
 
       {activity && (
@@ -214,6 +219,90 @@ export function StudentLive({ courseId }) {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// Instructor: the rotating check-in code (for the projector) + live attendance roster.
+function AttendanceInstructor({ sessionId }) {
+  const [code, setCode] = useState(null)
+  const [roster, setRoster] = useState(null)
+
+  useEffect(() => {
+    let alive = true
+    const tick = () => {
+      attendance.getCode(sessionId).then((c) => alive && setCode(c)).catch(() => {})
+      attendance.getAttendance(sessionId).then((r) => alive && setRoster(r)).catch(() => {})
+    }
+    tick()
+    const t = setInterval(tick, 4000)
+    return () => {
+      alive = false
+      clearInterval(t)
+    }
+  }, [sessionId])
+
+  return (
+    <div className="card" style={{ marginTop: 8 }}>
+      <div className="course-card__requests-label">Attendance check-in code</div>
+      <div className="attend-code">{code?.code ?? '······'}</div>
+      <div className="muted" style={{ fontSize: 12, textAlign: 'center' }}>
+        Rotates every 15s · {roster ? `${roster.present}/${roster.total} present` : '…'}
+      </div>
+      {roster && (
+        <div style={{ marginTop: 12 }}>
+          {roster.rows.map((r) => (
+            <div key={r.student} className="flex between" style={{ padding: '6px 0', fontSize: 13 }}>
+              <span>{r.student}</span>
+              <span className={`status-badge ${r.status === 'present' ? 'answered' : 'needs'}`}>
+                {r.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Student: enter the current code to check in; shows present / needs-poll state.
+function AttendanceStudent({ sessionId }) {
+  const [code, setCode] = useState('')
+  const [result, setResult] = useState(null)
+  const [error, setError] = useState('')
+
+  async function submit() {
+    setError('')
+    try {
+      const r = await attendance.checkin(sessionId, code.trim(), attendance.deviceId())
+      setResult(r)
+      setCode('')
+    } catch (e) {
+      setError(e.detail || 'Check-in failed.')
+    }
+  }
+
+  if (result?.present) {
+    return <p className="courses__ok" style={{ marginTop: 8 }}>✓ Checked in — you&apos;re marked present.</p>
+  }
+
+  return (
+    <div style={{ marginTop: 8 }}>
+      {result && result.needs_poll && (
+        <p className="courses__ok">✓ Code accepted — answer the poll to complete your attendance.</p>
+      )}
+      <div className="courses__row">
+        <input
+          placeholder="Enter check-in code"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          inputMode="numeric"
+        />
+        <button className="btn btn--primary" onClick={submit} disabled={!code.trim()}>
+          Check in
+        </button>
+      </div>
+      {error && <p className="courses__error">{error}</p>}
     </div>
   )
 }
