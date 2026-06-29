@@ -17,12 +17,23 @@ from app.config import settings
 from app.db import SessionLocal
 from app.main import app
 from app.models.auth import LoginToken
+from app.models.content import Chunk, Document
 from app.models.courses import Course, Enrollment
 from app.models.identity import User
 
 # A normal (non special-use) domain so EmailStr validation passes; `.local` would be
 # rejected by email-validator. No real mail is sent — the email backend is a fake.
 TEST_DOMAIN = "assistai-test.com"
+
+
+def _remove_storage(course_ids) -> None:
+    """Delete any uploaded files for the given test courses from local storage."""
+    import shutil
+    from pathlib import Path
+
+    base = Path(settings.storage_dir)
+    for cid in course_ids:
+        shutil.rmtree(base / str(cid), ignore_errors=True)
 
 
 class CapturingSender:
@@ -59,7 +70,15 @@ def cleanup_test_rows():
             course_ids = [
                 c.id for c in db.query(Course).filter(Course.owner_id.in_(test_user_ids)).all()
             ]
-            # Delete in FK order: enrollments -> courses -> tokens -> users.
+            # Delete in FK order: chunks -> documents -> enrollments -> courses -> tokens -> users.
+            if course_ids:
+                db.query(Chunk).filter(Chunk.course_id.in_(course_ids)).delete(
+                    synchronize_session=False
+                )
+                db.query(Document).filter(Document.course_id.in_(course_ids)).delete(
+                    synchronize_session=False
+                )
+                _remove_storage(course_ids)
             db.query(Enrollment).filter(
                 or_(
                     Enrollment.student_id.in_(test_user_ids),

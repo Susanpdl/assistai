@@ -41,6 +41,10 @@ uv run alembic upgrade head
 # `--host ::` binds IPv6 localhost — the Vite dev server and browser use IPv6 for
 # `localhost`, so the API must listen there too or the frontend's calls never arrive.
 uv run uvicorn app.main:app --reload --host ::
+
+# 6. (Phase 3+) Run the ingestion worker in a second terminal so uploaded course
+# files get extracted, chunked, embedded, and indexed into pgvector.
+uv run python -m app.ingestion.worker
 ```
 
 Check it's alive:
@@ -58,9 +62,13 @@ backend/
     main.py            FastAPI app + health endpoints
     config.py          settings (env-driven)
     db.py              engine + session dependency
+    storage.py         object-storage seam (local-disk backend; S3 later)
     models/            SQLAlchemy models (one file per domain area)
+    auth/ courses/ content/   feature routers (router + schemas + deps)
+    ingestion/         extract → chunk → embed → store pipeline + Redis queue + worker
   migrations/          Alembic (env.py + versions/)
   tests/               pytest
+  storage/             uploaded course files (local backend; gitignored)
   docker-compose.yml   Postgres (pgvector) + Redis
 ```
 

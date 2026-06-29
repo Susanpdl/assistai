@@ -26,6 +26,7 @@ class MessageRole(str, enum.Enum):
 class DocumentStatus(str, enum.Enum):
     processing = "processing"
     indexed = "indexed"
+    failed = "failed"
 
 
 class ActivityType(str, enum.Enum):

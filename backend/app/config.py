@@ -17,6 +17,23 @@ class Settings(BaseSettings):
     # Embeddings: the vector length stored in the `chunk` table. Must match the
     # embedding model used during ingestion.
     embedding_dim: int = 1024
+    # Which embedder to use. "local" is a deterministic, offline, hashing-based embedder
+    # for dev/tests (no API key); a real provider (e.g. Voyage) is wired in Phase 4.
+    embedding_backend: str = "local"
+
+    # --- Content ingestion (Phase 3) ---
+    # Where uploaded course files are stored. "local" writes to `storage_dir`; this is the
+    # object-storage seam — a future "s3" backend slots in here without touching callers.
+    storage_backend: str = "local"
+    storage_dir: str = "./storage"
+    # Reject uploads larger than this (megabytes) or with a disallowed extension.
+    max_upload_mb: int = 20
+    allowed_upload_extensions: str = "pdf,docx,pptx,txt,md"
+    # Redis list that the ingestion worker pulls document ids from.
+    ingest_queue_key: str = "assistai:ingest"
+    # Chunking defaults (~500 tokens / ~50 overlap, approximated by characters).
+    chunk_chars: int = 2000
+    chunk_overlap_chars: int = 200
 
     # CORS: which browser origins may call the API. Comma-separated in the env var.
     cors_origins: str = "http://localhost:5173"
@@ -55,6 +72,14 @@ class Settings(BaseSettings):
     @property
     def instructor_email_set(self) -> set[str]:
         return {e.strip().lower() for e in self.instructor_emails.split(",") if e.strip()}
+
+    @property
+    def allowed_extension_set(self) -> set[str]:
+        return {
+            e.strip().lower().lstrip(".")
+            for e in self.allowed_upload_extensions.split(",")
+            if e.strip()
+        }
 
 
 settings = Settings()
