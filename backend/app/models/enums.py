@@ -42,3 +42,8 @@ class AttendanceStatus(str, enum.Enum):
 class EscalationStatus(str, enum.Enum):
     needs = "needs"  # escalated to the instructor, awaiting a human answer
     answered = "answered"  # the instructor has responded
+
+
+class SessionStatus(str, enum.Enum):
+    live = "live"  # class is in session; students may join the room
+    ended = "ended"  # the session is over; the room is closed

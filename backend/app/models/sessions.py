@@ -11,12 +11,18 @@ from datetime import datetime
 
 from sqlalchemy import Boolean
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy import ForeignKey, String, Text
+from sqlalchemy import ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, TimestampMixin, uuid_pk
-from app.models.enums import ActivityType, AttendanceStatus, EscalationStatus, MessageRole
+from app.models.enums import (
+    ActivityType,
+    AttendanceStatus,
+    EscalationStatus,
+    MessageRole,
+    SessionStatus,
+)
 
 
 class Session(Base):
@@ -25,6 +31,11 @@ class Session(Base):
     id: Mapped[uuid.UUID] = uuid_pk()
     course_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("course.id"), nullable=False, index=True
+    )
+    status: Mapped[SessionStatus] = mapped_column(
+        SAEnum(SessionStatus, name="session_status"),
+        default=SessionStatus.live,
+        nullable=False,
     )
     started_at: Mapped[datetime | None] = mapped_column(nullable=True)
     ended_at: Mapped[datetime | None] = mapped_column(nullable=True)
@@ -68,10 +79,16 @@ class Activity(Base, TimestampMixin):
     question: Mapped[str] = mapped_column(Text, nullable=False)
     # The answer choices, stored as a JSON array of strings.
     options: Mapped[list] = mapped_column(JSONB, nullable=False)
+    # Whether the instructor has revealed live results to students yet.
+    revealed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
 
 class ActivityResponse(Base, TimestampMixin):
     __tablename__ = "activity_response"
+    # One response per student per activity (also serves as an attendance proof in Phase 6).
+    __table_args__ = (
+        UniqueConstraint("activity_id", "student_id", name="uq_activity_response_student"),
+    )
 
     id: Mapped[uuid.UUID] = uuid_pk()
     activity_id: Mapped[uuid.UUID] = mapped_column(

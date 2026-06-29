@@ -5,6 +5,8 @@ readiness check (`/health/ready`, which actually talks to Postgres and Redis). F
 routers (auth, courses, tutor, ...) get mounted here in later phases.
 """
 
+from contextlib import asynccontextmanager
+
 import redis
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,9 +17,22 @@ from app.config import settings
 from app.content.router import router as content_router
 from app.courses.router import router as courses_router
 from app.db import engine
+from app.live.manager import manager
+from app.live.router import router as live_router
+from app.live.ws import router as live_ws_router
 from app.tutor.router import router as tutor_router
 
-app = FastAPI(title="AssistAI API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    # Start the realtime pub/sub subscriber so WebSocket rooms receive published messages.
+    manager.start()
+    await manager.wait_ready()
+    yield
+    await manager.stop()
+
+
+app = FastAPI(title="AssistAI API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,6 +46,8 @@ app.include_router(auth_router)
 app.include_router(courses_router)
 app.include_router(content_router)
 app.include_router(tutor_router)
+app.include_router(live_router)
+app.include_router(live_ws_router)
 
 
 @app.get("/health")
