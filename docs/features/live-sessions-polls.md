@@ -51,9 +51,15 @@ connection that stays open both ways, unlike a normal request that closes after 
 - These responses double as an attendance proof in Phase 6.
 
 ## Status
-- ✅ Done: design; live UI + poll + results exist in prototype (mock, local state).
-- ⏳ Remaining: WebSocket endpoint + connection manager, Redis pub/sub, session lifecycle, real poll
-  push/aggregate.
+- ✅ **Done (Phase 5):** WebSocket endpoint (`/ws/sessions/{id}`, cookie-authed + access-gated),
+  connection manager with Redis pub/sub relay (scale-safe), connected-count via a shared Redis set,
+  session lifecycle (start/end), poll push + answer aggregation + reveal, role-aware delivery
+  (tallies to the instructor until reveal), one-answer-per-student enforcement, and the
+  `/courses/{id}/sessions`, `/sessions/{id}/end`, `/sessions/{id}/activities`, `/activities/{id}/reveal`,
+  `/activities/{id}/results` API. Tests: `testing/live-sessions-polls.md` (4 new, 37 total).
+- ⏳ **Deferred:** a course-level "class is live" push to students who aren't yet in the room (they
+  currently poll `GET /courses/{id}/sessions/active`); quizzes stay out of live mode by design — a
+  student asks the AI tutor for a quiz from the course materials instead (per the open question).
 
 ## Tests
 Log: `testing/live-sessions-polls.md`. Key cases:

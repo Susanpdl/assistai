@@ -110,5 +110,9 @@ Phase 0 ─┬─ Phase 1 ─┬─ Phase 2 ─┬─ Phase 3 ── Phase 4 ⭐
   machine mirroring the LangGraph design), intent classifier + tutor guardrail prompt, citations,
   escalation + integrity flagging, and the `/ask` `/messages` `/escalations` API. Generation is a
   seam — free offline `LocalGenerator` by default, Claude (`claude-sonnet-4-6`) when configured.
-- ⏭️ **Next:** Phase 5 — Live Sessions & Polls (WebSockets, connection manager, push poll, live
-  results).
+- ✅ **Phase 5** — Live Sessions & Polls: WebSocket rooms (`/ws/sessions/{id}`), a connection
+  manager with Redis pub/sub relay (scale-safe), connected-count via a shared Redis set, session
+  start/end, poll push + live aggregation + instructor reveal, role-aware delivery, one-answer-per-
+  student. HTTP: start/end session, push poll, reveal, results, active-session.
+- ⏭️ **Next:** Phase 6 — Attendance (rotating code + code/poll rule + device binding + instructor
+  attendance view), built on sessions and reusing poll responses.
