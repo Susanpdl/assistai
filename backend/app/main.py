@@ -15,6 +15,7 @@ from app.config import settings
 from app.content.router import router as content_router
 from app.courses.router import router as courses_router
 from app.db import engine
+from app.tutor.router import router as tutor_router
 
 app = FastAPI(title="AssistAI API", version="0.1.0")
 
@@ -29,6 +30,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(courses_router)
 app.include_router(content_router)
+app.include_router(tutor_router)
 
 
 @app.get("/health")

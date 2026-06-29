@@ -20,6 +20,7 @@ from app.models.auth import LoginToken
 from app.models.content import Chunk, Document
 from app.models.courses import Course, Enrollment
 from app.models.identity import User
+from app.models.sessions import Message
 
 # A normal (non special-use) domain so EmailStr validation passes; `.local` would be
 # rejected by email-validator. No real mail is sent — the email backend is a fake.
@@ -70,9 +71,12 @@ def cleanup_test_rows():
             course_ids = [
                 c.id for c in db.query(Course).filter(Course.owner_id.in_(test_user_ids)).all()
             ]
-            # Delete in FK order: chunks -> documents -> enrollments -> courses -> tokens -> users.
+            # Delete in FK order: chunks/messages -> documents -> enrollments -> courses ...
             if course_ids:
                 db.query(Chunk).filter(Chunk.course_id.in_(course_ids)).delete(
+                    synchronize_session=False
+                )
+                db.query(Message).filter(Message.course_id.in_(course_ids)).delete(
                     synchronize_session=False
                 )
                 db.query(Document).filter(Document.course_id.in_(course_ids)).delete(

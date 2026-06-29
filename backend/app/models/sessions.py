@@ -9,13 +9,14 @@ valid code check-in AND (if a poll ran) an ActivityResponse in this Session?".
 import uuid
 from datetime import datetime
 
+from sqlalchemy import Boolean
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, TimestampMixin, uuid_pk
-from app.models.enums import ActivityType, AttendanceStatus, MessageRole
+from app.models.enums import ActivityType, AttendanceStatus, EscalationStatus, MessageRole
 
 
 class Session(Base):
@@ -40,11 +41,20 @@ class Message(Base, TimestampMixin):
     session_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("session.id"), nullable=True, index=True
     )
+    # The student this exchange belongs to (their email). Set on both the question and
+    # its AI answer, so a student's async-study history is `author == student.email`.
     author: Mapped[str] = mapped_column(String(200), nullable=False)
     role: Mapped[MessageRole] = mapped_column(SAEnum(MessageRole, name="message_role"), nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=False)
     # Citation is set only on grounded AI answers (e.g. "Week 4, p.12").
     citation: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    # An integrity flag: the request looked like "do my assignment" and was steered to a
+    # hint/refusal. Recorded for the instructor to review (guardrails defense-in-depth).
+    flagged: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # Non-null when this question was escalated to the instructor; tracks needs/answered.
+    escalation_status: Mapped[EscalationStatus | None] = mapped_column(
+        SAEnum(EscalationStatus, name="escalation_status"), nullable=True
+    )
 
 
 class Activity(Base, TimestampMixin):

@@ -37,3 +37,8 @@ class ActivityType(str, enum.Enum):
 class AttendanceStatus(str, enum.Enum):
     present = "present"
     absent = "absent"
+
+
+class EscalationStatus(str, enum.Enum):
+    needs = "needs"  # escalated to the instructor, awaiting a human answer
+    answered = "answered"  # the instructor has responded

@@ -64,8 +64,9 @@ backend/
     db.py              engine + session dependency
     storage.py         object-storage seam (local-disk backend; S3 later)
     models/            SQLAlchemy models (one file per domain area)
-    auth/ courses/ content/   feature routers (router + schemas + deps)
+    auth/ courses/ content/ tutor/   feature routers (router + schemas + deps)
     ingestion/         extract → chunk → embed → store pipeline + Redis queue + worker
+    tutor/             RAG: retrieval + generation seam + guardrails + orchestrator
   migrations/          Alembic (env.py + versions/)
   tests/               pytest
   storage/             uploaded course files (local backend; gitignored)

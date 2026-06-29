@@ -35,6 +35,20 @@ class Settings(BaseSettings):
     chunk_chars: int = 2000
     chunk_overlap_chars: int = 200
 
+    # --- AI Tutor (Phase 4) ---
+    # Which generator to use. "local" is a deterministic, offline, extractive generator
+    # (dev/tests, no API key, zero cost). "claude" calls the Anthropic API.
+    generation_backend: str = "local"
+    anthropic_api_key: str = ""
+    # The Claude model for grounded generation when generation_backend == "claude".
+    tutor_model: str = "claude-sonnet-4-6"
+    tutor_max_tokens: int = 1024
+    # How many chunks to retrieve as context for an answer.
+    tutor_top_k: int = 4
+    # Minimum cosine similarity (0..1) for the best chunk to count as "relevant". Below
+    # this we don't invent an answer — we say we're unsure and escalate to the instructor.
+    tutor_min_similarity: float = 0.05
+
     # CORS: which browser origins may call the API. Comma-separated in the env var.
     cors_origins: str = "http://localhost:5173"
 
