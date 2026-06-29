@@ -49,6 +49,13 @@ class Settings(BaseSettings):
     # this we don't invent an answer — we say we're unsure and escalate to the instructor.
     tutor_min_similarity: float = 0.05
 
+    # --- Attendance (Phase 6) ---
+    # Secret for the time-based rotating check-in code (HMAC). Set a real value in prod.
+    attendance_code_secret: str = "dev-attendance-secret-change-me"
+    # How often the code rotates, and how many past windows still validate (grace for typing).
+    attendance_code_interval_seconds: int = 15
+    attendance_code_grace_windows: int = 1
+
     # CORS: which browser origins may call the API. Comma-separated in the env var.
     cors_origins: str = "http://localhost:5173"
 

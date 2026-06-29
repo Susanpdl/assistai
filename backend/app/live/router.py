@@ -99,6 +99,10 @@ def end_session(
     s.status = SessionStatus.ended
     s.ended_at = datetime.now(timezone.utc)
     db.commit()
+    # Lock in final attendance (present/absent) now that we know if a poll ran and who answered.
+    from app.attendance.service import finalize
+
+    finalize(db, s)
     db.refresh(s)
     publish_sync(str(session_id), service.session_ended_msg())
     redis_client.delete(conn_key(str(session_id)))

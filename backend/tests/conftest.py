@@ -20,7 +20,14 @@ from app.models.auth import LoginToken
 from app.models.content import Chunk, Document
 from app.models.courses import Course, Enrollment
 from app.models.identity import User
-from app.models.sessions import Activity, ActivityResponse, Message, Session
+from app.models.sessions import (
+    Activity,
+    ActivityResponse,
+    Attendance,
+    DeviceBinding,
+    Message,
+    Session,
+)
 
 # A normal (non special-use) domain so EmailStr validation passes; `.local` would be
 # rejected by email-validator. No real mail is sent — the email backend is a fake.
@@ -92,6 +99,12 @@ def cleanup_test_rows():
                         db.query(Activity).filter(Activity.id.in_(activity_ids)).delete(
                             synchronize_session=False
                         )
+                    db.query(Attendance).filter(
+                        Attendance.session_id.in_(session_ids)
+                    ).delete(synchronize_session=False)
+                    db.query(DeviceBinding).filter(
+                        DeviceBinding.session_id.in_(session_ids)
+                    ).delete(synchronize_session=False)
                     db.query(Session).filter(Session.id.in_(session_ids)).delete(
                         synchronize_session=False
                     )

@@ -102,6 +102,10 @@ class ActivityResponse(Base, TimestampMixin):
 
 class Attendance(Base, TimestampMixin):
     __tablename__ = "attendance"
+    # One attendance record per student per session.
+    __table_args__ = (
+        UniqueConstraint("session_id", "student_id", name="uq_attendance_student"),
+    )
 
     id: Mapped[uuid.UUID] = uuid_pk()
     session_id: Mapped[uuid.UUID] = mapped_column(
@@ -113,5 +117,27 @@ class Attendance(Base, TimestampMixin):
     status: Mapped[AttendanceStatus] = mapped_column(
         SAEnum(AttendanceStatus, name="attendance_status"), nullable=False
     )
-    # Which checks passed, e.g. {"code": true, "poll": true}.
-    proofs: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    # Which proofs passed, e.g. ["code", "poll"].
+    proofs: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+
+
+class DeviceBinding(Base, TimestampMixin):
+    """One account may check in per device per session (anti-cheat).
+
+    A `device_id` (a per-browser id sent by the client) is bound to the first student that
+    checks in with it for a session; a different student reusing the same device is rejected.
+    """
+
+    __tablename__ = "device_binding"
+    __table_args__ = (
+        UniqueConstraint("session_id", "device_id", name="uq_device_binding_session_device"),
+    )
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("session.id"), nullable=False, index=True
+    )
+    device_id: Mapped[str] = mapped_column(String(200), nullable=False)
+    student_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("user.id"), nullable=False, index=True
+    )
