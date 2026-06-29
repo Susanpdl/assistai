@@ -117,5 +117,8 @@ Phase 0 ─┬─ Phase 1 ─┬─ Phase 2 ─┬─ Phase 3 ── Phase 4 ⭐
 - ✅ **Phase 6** — Attendance: HMAC time-based rotating code (+grace), check-in with device binding
   (one account/device/session), the code+poll present rule reusing Phase 5 responses, finalize on
   end, instructor code display + live roster, student check-in UI. API: code / checkin / attendance.
-- ⏭️ **Next:** Phase 7 — Announcements & Notifications (post text announcements, email enrolled
-  students, student comments), reusing the Phase 1 email infrastructure.
+- ✅ **Phase 7** — Announcements & Notifications: post/list/comment, owner edit + delete + comment
+  moderation, out-of-band batched email (background task + per-recipient retry) reusing the Phase 1
+  email provider, instructor composer + student feed UIs.
+- ⏭️ **Next:** Phase 8 — Instructor Dashboard polish (wire the dashboard stats and escalated-questions
+  list to real data now that the features feeding them exist).

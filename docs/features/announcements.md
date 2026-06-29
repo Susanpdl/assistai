@@ -39,9 +39,14 @@ notifications. Fewer moving parts.)*
 - Email send failures are retried/logged, not silently dropped.
 
 ## Status
-- ✅ Done: design.
-- ⏳ Remaining: everything — models, post/list/comment endpoints, batched email send, both UIs. **No
-  UI exists yet.**
+- ✅ **Done (Phase 7):** post/list/comment endpoints, owner edit + delete, comment moderation,
+  batched out-of-band email send (background task with per-recipient retry) reusing the Phase 1
+  email provider, and both UIs (instructor composer + feed, student feed with comment box). API:
+  `POST/GET /courses/{id}/announcements`, `PATCH/DELETE /announcements/{id}`,
+  `POST /announcements/{id}/comments`, `DELETE /comments/{id}`. Tests: `testing/announcements.md`
+  (6 new, 49 total). Models (`Announcement`, `Comment`) already existed — no migration.
+- ⏳ **Deferred:** a real unsubscribe link/flow (v1 email carries an unsubscribe note only);
+  attachments/scheduling/pinning remain out of scope.
 
 ## Tests
 Log: `testing/announcements.md`. Key cases:
