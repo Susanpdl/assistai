@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthContext.jsx'
 import * as api from '../api/courses.js'
 import * as content from '../api/content.js'
+import * as tutor from '../api/tutor.js'
 
 export default function CoursesView() {
   const { user } = useAuth()
@@ -319,13 +320,125 @@ function StudentCourses() {
       {courses.length === 0 ? (
         <p className="courses__empty">You&apos;re not enrolled in any courses yet.</p>
       ) : (
-        courses.map((c) => (
-          <div key={c.id} className="card course-card">
-            <div className="course-card__name">{c.name}</div>
-            <div className="course-card__code">{c.code}</div>
-          </div>
-        ))
+        courses.map((c) => <StudentCourseCard key={c.id} course={c} />)
       )}
+    </div>
+  )
+}
+
+function StudentCourseCard({ course }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="card course-card">
+      <div className="course-card__head">
+        <div>
+          <div className="course-card__name">{course.name}</div>
+          <div className="course-card__code">{course.code}</div>
+        </div>
+        <button className="btn btn--primary" onClick={() => setOpen((o) => !o)}>
+          {open ? 'Close' : 'Ask the AI'}
+        </button>
+      </div>
+      {open && <CourseChat courseId={course.id} />}
+    </div>
+  )
+}
+
+// Phase 4 — real grounded chat backed by POST /ask. Answers carry a citation pill;
+// when the tutor escalates, we show a "sent to your instructor" note.
+function CourseChat({ courseId }) {
+  const [messages, setMessages] = useState([])
+  const [typing, setTyping] = useState(false)
+  const [value, setValue] = useState('')
+  const endRef = useRef(null)
+
+  useEffect(() => {
+    tutor
+      .listMessages(courseId)
+      .then((rows) =>
+        setMessages(
+          rows.map((m) => ({ role: m.role, text: m.text, citation: m.citation })),
+        ),
+      )
+      .catch(() => {})
+  }, [courseId])
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, typing])
+
+  async function send() {
+    const q = value.trim()
+    if (!q) return
+    setValue('')
+    setMessages((m) => [...m, { role: 'user', text: q }])
+    setTyping(true)
+    try {
+      const reply = await tutor.ask(courseId, q)
+      setMessages((m) => [
+        ...m,
+        { role: 'ai', text: reply.answer, citation: reply.citation, escalated: reply.escalated },
+      ])
+    } catch {
+      setMessages((m) => [
+        ...m,
+        { role: 'ai', text: 'Something went wrong reaching the tutor.', error: true },
+      ])
+    } finally {
+      setTyping(false)
+    }
+  }
+
+  return (
+    <div className="course-chat">
+      <div className="course-chat__scroll">
+        {messages.length === 0 && !typing && (
+          <p className="courses__empty">
+            Ask anything about this course — answers are grounded in your professor&apos;s
+            materials and cited.
+          </p>
+        )}
+        {messages.map((m, i) => (
+          <div key={i} className={`msg ${m.role === 'ai' ? 'msg--ai' : 'msg--user'}`}>
+            <div className="msg__body">
+              <div className="bubble">{m.text}</div>
+              {m.citation && (
+                <span className="source-pill">{m.citation}</span>
+              )}
+              {m.escalated && <span className="msg__meta">↪ Sent to your instructor</span>}
+            </div>
+          </div>
+        ))}
+        {typing && (
+          <div className="msg msg--ai">
+            <div className="msg__body">
+              <div className="bubble">
+                <span className="typing"><span /><span /><span /></span>
+              </div>
+            </div>
+          </div>
+        )}
+        <div ref={endRef} />
+      </div>
+      <div className="composer">
+        <div className="composer__inner">
+          <textarea
+            rows={1}
+            value={value}
+            placeholder="Ask anything about this course…"
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                send()
+              }
+            }}
+          />
+          <button className="send-btn" onClick={send} disabled={!value.trim()} aria-label="Send">
+            ↑
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
