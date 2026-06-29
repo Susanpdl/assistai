@@ -57,6 +57,18 @@ def send_magic_link(sender: EmailSender, to: str, link: str) -> None:
     sender.send(to=to, subject="Your AssistAI sign-in link", body=body)
 
 
+def send_announcement(sender: EmailSender, to: str, course_name: str, text: str) -> None:
+    subject = f"[{course_name}] New announcement"
+    body = (
+        f"Your instructor posted an announcement in {course_name}:\n\n"
+        f"{text}\n\n"
+        "— AssistAI\n\n"
+        f"You're receiving this because you're enrolled in {course_name}. "
+        "To stop these emails, ask your instructor to remove you from the course."
+    )
+    sender.send(to=to, subject=subject, body=body)
+
+
 def send_enrollment_decision(sender: EmailSender, to: str, course_name: str, approved: bool) -> None:
     if approved:
         subject = f"You're enrolled in {course_name}"

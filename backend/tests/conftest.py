@@ -16,6 +16,7 @@ from app.auth.email import get_email_sender
 from app.config import settings
 from app.db import SessionLocal
 from app.main import app
+from app.models.announcements import Announcement, Comment
 from app.models.auth import LoginToken
 from app.models.content import Chunk, Document
 from app.models.courses import Course, Enrollment
@@ -106,6 +107,19 @@ def cleanup_test_rows():
                         DeviceBinding.session_id.in_(session_ids)
                     ).delete(synchronize_session=False)
                     db.query(Session).filter(Session.id.in_(session_ids)).delete(
+                        synchronize_session=False
+                    )
+                ann_ids = [
+                    a.id
+                    for a in db.query(Announcement)
+                    .filter(Announcement.course_id.in_(course_ids))
+                    .all()
+                ]
+                if ann_ids:
+                    db.query(Comment).filter(Comment.announcement_id.in_(ann_ids)).delete(
+                        synchronize_session=False
+                    )
+                    db.query(Announcement).filter(Announcement.id.in_(ann_ids)).delete(
                         synchronize_session=False
                     )
                 db.query(Chunk).filter(Chunk.course_id.in_(course_ids)).delete(

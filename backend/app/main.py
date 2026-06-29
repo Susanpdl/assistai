@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
+from app.announcements.router import router as announcements_router
 from app.attendance.router import router as attendance_router
 from app.auth.router import router as auth_router
 from app.config import settings
@@ -50,6 +51,7 @@ app.include_router(tutor_router)
 app.include_router(live_router)
 app.include_router(live_ws_router)
 app.include_router(attendance_router)
+app.include_router(announcements_router)
 
 
 @app.get("/health")

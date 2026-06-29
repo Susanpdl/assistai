@@ -64,11 +64,12 @@ backend/
     db.py              engine + session dependency
     storage.py         object-storage seam (local-disk backend; S3 later)
     models/            SQLAlchemy models (one file per domain area)
-    auth/ courses/ content/ tutor/ live/ attendance/   feature routers
+    auth/ courses/ content/ tutor/ live/ attendance/ announcements/   feature routers
     ingestion/         extract → chunk → embed → store pipeline + Redis queue + worker
     tutor/             RAG: retrieval + generation seam + guardrails + orchestrator
     live/              WebSocket rooms + Redis pub/sub manager + poll push/aggregate
     attendance/        rotating check-in code + device binding + poll-match rule
+    announcements/     post/comment + out-of-band batched email (reuses Phase 1 email)
   migrations/          Alembic (env.py + versions/)
   tests/               pytest
   storage/             uploaded course files (local backend; gitignored)
