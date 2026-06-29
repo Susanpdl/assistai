@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext.jsx'
 import * as api from '../api/courses.js'
 import * as content from '../api/content.js'
 import * as tutor from '../api/tutor.js'
+import { InstructorLive, StudentLive } from './Live.jsx'
 
 export default function CoursesView() {
   const { user } = useAuth()
@@ -123,6 +124,7 @@ function InstructorCourseCard({ course }) {
       </div>
 
       <DocumentsPanel courseId={course.id} />
+      <InstructorLive courseId={course.id} />
     </div>
   )
 }
@@ -339,6 +341,7 @@ function StudentCourseCard({ course }) {
           {open ? 'Close' : 'Ask the AI'}
         </button>
       </div>
+      <StudentLive courseId={course.id} />
       {open && <CourseChat courseId={course.id} />}
     </div>
   )
