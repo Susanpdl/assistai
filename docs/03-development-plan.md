@@ -105,5 +105,10 @@ Phase 0 ─┬─ Phase 1 ─┬─ Phase 2 ─┬─ Phase 3 ── Phase 4 ⭐
   (PDF/DOCX/PPTX/TXT) → chunk → embed → pgvector; upload/list/delete/reindex API with status
   (`processing`/`indexed`/`failed`); course-scoped chunks (NFR-5); instructor upload UI wired live.
   *(Real embedding model + tutor retrieval deferred to Phase 4; deterministic `LocalEmbedder` for now.)*
-- ⏭️ **Next:** Phase 4 — AI Tutor (RAG + guardrails): grounded Q&A with citations over the indexed
-  chunks, Socratic guardrails, escalation. ⭐ core slice.
+- ✅ **Phase 4** ⭐ — AI Tutor (RAG + guardrails): course-scoped retrieval over pgvector, a
+  classify→retrieve→generate→cite orchestrator (with refuse/escalate branches; lightweight state
+  machine mirroring the LangGraph design), intent classifier + tutor guardrail prompt, citations,
+  escalation + integrity flagging, and the `/ask` `/messages` `/escalations` API. Generation is a
+  seam — free offline `LocalGenerator` by default, Claude (`claude-sonnet-4-6`) when configured.
+- ⏭️ **Next:** Phase 5 — Live Sessions & Polls (WebSockets, connection manager, push poll, live
+  results).

@@ -66,9 +66,20 @@ See "The guardrails" above: system prompt + intent classifier + optional logging
 strictness. Retrieval is course-scoped so answers can't leak other courses' material.
 
 ## Status
-- ✅ Done: design; chat UI exists in prototype (canned replies).
-- ⏳ Remaining: LangGraph graph, retrieval against pgvector, Claude integration, guardrail prompt +
-  classifier, citation wiring, escalation path.
+- ✅ **Done (Phase 4):** retrieval against pgvector (course-scoped), the orchestrator
+  (classify → retrieve → generate → cite, plus refuse/escalate branches) as a lightweight explicit
+  state machine mirroring the LangGraph node design, intent classifier + tutor guardrail prompt,
+  citation wiring, escalation path + `flagged` integrity logging, and the `/ask` `/messages`
+  `/escalations` API. Generation is a seam: free offline `LocalGenerator` by default, Claude
+  (`claude-sonnet-4-6`) via `GENERATION_BACKEND=claude`. Tests: `testing/ai-tutor.md` (7 new, 33 total).
+- ⏳ **Deferred:** swap the explicit orchestrator for LangGraph proper if the branching grows;
+  realtime push of escalations to the live instructor console (Phase 5 + Phase 8); a learned/LLM
+  intent classifier if the rule-based one proves too blunt.
+
+### Implementation note — LangGraph
+The architecture names LangGraph; for v1 we implemented the same node structure as plain Python
+(no extra dependency, fully testable, deterministic in tests). The API and persistence don't change
+if we later drop LangGraph in behind the orchestrator.
 
 ## Tests
 Log: `testing/ai-tutor.md`. Key cases:
