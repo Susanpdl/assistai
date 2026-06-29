@@ -6,6 +6,7 @@ import * as api from '../api/courses.js'
 import * as content from '../api/content.js'
 import * as tutor from '../api/tutor.js'
 import { InstructorLive, StudentLive } from './Live.jsx'
+import Announcements from './Announcements.jsx'
 
 export default function CoursesView() {
   const { user } = useAuth()
@@ -125,6 +126,7 @@ function InstructorCourseCard({ course }) {
 
       <DocumentsPanel courseId={course.id} />
       <InstructorLive courseId={course.id} />
+      <Announcements courseId={course.id} isOwner />
     </div>
   )
 }
@@ -342,6 +344,7 @@ function StudentCourseCard({ course }) {
         </button>
       </div>
       <StudentLive courseId={course.id} />
+      <Announcements courseId={course.id} isOwner={false} />
       {open && <CourseChat courseId={course.id} />}
     </div>
   )
