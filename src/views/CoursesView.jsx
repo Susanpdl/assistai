@@ -1,8 +1,9 @@
 // Phase 2 — real course & enrollment screens (separate from the mock demo views).
 // Instructors create courses + approve/reject requests; students join by code.
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthContext.jsx'
 import * as api from '../api/courses.js'
+import * as content from '../api/content.js'
 
 export default function CoursesView() {
   const { user } = useAuth()
@@ -119,6 +120,146 @@ function InstructorCourseCard({ course }) {
           ))
         )}
       </div>
+
+      <DocumentsPanel courseId={course.id} />
+    </div>
+  )
+}
+
+// Phase 3 — upload course files; the worker chunks + embeds them so the tutor can
+// ground answers in them. Statuses (processing/indexed/failed) come from the backend.
+function DocumentsPanel({ courseId }) {
+  const [docs, setDocs] = useState([])
+  const [drag, setDrag] = useState(false)
+  const [error, setError] = useState('')
+  const inputRef = useRef(null)
+
+  const load = useCallback(async () => {
+    try {
+      setDocs(await content.listDocuments(courseId))
+    } catch {
+      /* ignore transient load errors */
+    }
+  }, [courseId])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  // While anything is still processing, poll so the UI reflects the worker's progress.
+  useEffect(() => {
+    if (!docs.some((d) => d.status === 'processing')) return undefined
+    const timer = setInterval(load, 2500)
+    return () => clearInterval(timer)
+  }, [docs, load])
+
+  async function upload(files) {
+    setError('')
+    for (const file of files) {
+      try {
+        await content.uploadDocument(courseId, file)
+      } catch (e) {
+        setError(
+          e.status === 413
+            ? 'That file is too large.'
+            : e.status === 422
+              ? 'Unsupported file type.'
+              : 'Upload failed.',
+        )
+      }
+    }
+    await load()
+  }
+
+  function onDrop(e) {
+    e.preventDefault()
+    setDrag(false)
+    if (e.dataTransfer.files?.length) upload([...e.dataTransfer.files])
+  }
+
+  return (
+    <div className="course-card__requests">
+      <div className="course-card__requests-label">Course content ({docs.length})</div>
+
+      <div
+        className={`upload-box ${drag ? 'drag' : ''}`}
+        onDragOver={(e) => {
+          e.preventDefault()
+          setDrag(true)
+        }}
+        onDragLeave={() => setDrag(false)}
+        onDrop={onDrop}
+        onClick={() => inputRef.current?.click()}
+      >
+        <div className="upload-box__icon">⬆</div>
+        <h4>Drop slides, notes, or readings here</h4>
+        <p>The AI reads these to ground its answers in your material.</p>
+        <div className="formats">
+          <span className="format-tag">PDF</span>
+          <span className="format-tag">DOCX</span>
+          <span className="format-tag">PPTX</span>
+          <span className="format-tag">TXT</span>
+        </div>
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          accept=".pdf,.docx,.pptx,.txt,.md"
+          hidden
+          onChange={(e) => {
+            if (e.target.files?.length) upload([...e.target.files])
+            e.target.value = ''
+          }}
+        />
+      </div>
+
+      {error && <p className="courses__error">{error}</p>}
+
+      {docs.map((d) => (
+        <DocRow key={d.id} doc={d} onChange={load} />
+      ))}
+    </div>
+  )
+}
+
+function DocRow({ doc, onChange }) {
+  const ext = (doc.type || '').toLowerCase()
+
+  async function remove() {
+    await content.deleteDocument(doc.id)
+    onChange()
+  }
+  async function retry() {
+    await content.reindexDocument(doc.id)
+    onChange()
+  }
+
+  return (
+    <div className="file-row">
+      <div className={`file-row__icon ${ext}`}>{ext.toUpperCase()}</div>
+      <div className="file-row__main">
+        <div className="file-row__name">{doc.filename}</div>
+        <div className="file-row__sub">
+          {doc.status === 'indexed' && `${doc.chunk_count} chunks embedded`}
+          {doc.status === 'processing' && 'Queued for indexing'}
+          {doc.status === 'failed' && (doc.error || 'Failed to process')}
+        </div>
+      </div>
+
+      {doc.status === 'indexed' && <span className="file-status indexed">✓ Indexed</span>}
+      {doc.status === 'processing' && (
+        <span className="file-status processing">
+          <span className="mini-spinner" /> Processing…
+        </span>
+      )}
+      {doc.status === 'failed' && (
+        <button className="btn btn--ghost" onClick={retry}>
+          Retry
+        </button>
+      )}
+      <button className="btn btn--ghost" onClick={remove} aria-label="Delete" title="Delete">
+        ✕
+      </button>
     </div>
   )
 }
