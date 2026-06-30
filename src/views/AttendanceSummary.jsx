@@ -28,23 +28,17 @@ function downloadCsv(session) {
 }
 
 export default function AttendanceSummary({ courseId }) {
-  const [open, setOpen] = useState(false)
   const [sessions, setSessions] = useState(null)
 
   useEffect(() => {
-    if (open) attendance.getSummary(courseId).then((d) => setSessions(d.sessions)).catch(() => {})
-  }, [open, courseId])
+    attendance.getSummary(courseId).then((d) => setSessions(d.sessions)).catch(() => {})
+  }, [courseId])
 
   return (
     <div className="course-card__requests">
-      <div className="course-card__requests-label" style={{ display: 'flex', alignItems: 'center' }}>
-        Attendance history
-        <button className="btn btn--ghost" style={{ marginLeft: 'auto' }} onClick={() => setOpen((o) => !o)}>
-          {open ? 'Hide' : 'View'}
-        </button>
-      </div>
+      <div className="course-card__requests-label">Attendance history</div>
 
-      {open && sessions && (
+      {sessions && (
         sessions.length === 0 ? (
           <p className="courses__empty">No sessions in the last 4 months.</p>
         ) : (

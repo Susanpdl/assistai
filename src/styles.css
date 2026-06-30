@@ -638,6 +638,48 @@ input, textarea { font-family: inherit; }
 .courses__error { font-size: 13px; color: var(--ink); margin: 12px 0 0; }
 .courses__ok { font-size: 13px; color: var(--ink-soft); margin: 12px 0 0; }
 
+/* App top bar */
+.topbar {
+  height: 56px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 22px; background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.topbar__brand {
+  display: flex; align-items: center; gap: 9px;
+  font-weight: 600; font-size: 15px; letter-spacing: -0.01em;
+}
+.topbar__right { display: flex; align-items: center; gap: 12px; }
+.topbar__email { font-size: 13px; color: var(--muted); }
+.role-pill {
+  font-size: 11px; font-weight: 600; text-transform: capitalize;
+  padding: 3px 9px; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--line-strong); color: var(--ink-soft);
+}
+.role-pill--instructor { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+/* In-card tabs (per course) */
+.course-tabs {
+  display: flex; gap: 2px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--line); margin-top: 14px;
+}
+.course-tabs button {
+  border: none; background: transparent; cursor: pointer;
+  display: flex; align-items: center;
+  padding: 9px 13px; font-size: 13px; font-weight: 500; color: var(--muted);
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: color 0.14s ease;
+}
+.course-tabs button:hover { color: var(--ink); }
+.course-tabs button.active { color: var(--ink); border-bottom-color: var(--ink); }
+.tab-badge {
+  margin-left: 6px; background: var(--ink); color: #fff;
+  font-size: 10px; font-weight: 700; line-height: 1.5;
+  border-radius: 999px; padding: 0 6px;
+}
+.course-tab-body { padding-top: 4px; }
+.course-tab-body > .course-card__requests:first-child { border-top: none; padding-top: 10px; }
+.course-tab-body .course-chat { border-top: none; margin-top: 6px; padding-top: 6px; }
+
 .course-card { padding: 18px 20px; margin-bottom: 14px; }
 .course-card__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
 

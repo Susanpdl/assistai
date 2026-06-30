@@ -75,7 +75,16 @@ function InstructorCourses() {
   )
 }
 
+const INSTRUCTOR_TABS = [
+  ['dashboard', 'Dashboard'],
+  ['content', 'Content'],
+  ['live', 'Live session'],
+  ['attendance', 'Attendance'],
+  ['announcements', 'Announcements'],
+]
+
 function InstructorCourseCard({ course }) {
+  const [tab, setTab] = useState('dashboard')
   const [pending, setPending] = useState([])
 
   const loadPending = useCallback(
@@ -102,35 +111,52 @@ function InstructorCourseCard({ course }) {
         </div>
       </div>
 
-      <CourseDashboard courseId={course.id} />
-
-      <div className="course-card__requests">
-        <div className="course-card__requests-label">Pending requests ({pending.length})</div>
-        {pending.length === 0 ? (
-          <p className="courses__empty">No pending requests.</p>
-        ) : (
-          pending.map((e) => (
-            <div key={e.id} className="req-row">
-              <span className="req-row__who">
-                {e.student?.name} · {e.student?.email}
-              </span>
-              <div className="req-row__actions">
-                <button className="btn btn--primary" onClick={() => decide(e.id, 'approved')}>
-                  Approve
-                </button>
-                <button className="btn btn--ghost" onClick={() => decide(e.id, 'rejected')}>
-                  Reject
-                </button>
-              </div>
-            </div>
-          ))
-        )}
+      <div className="course-tabs" role="tablist">
+        {INSTRUCTOR_TABS.map(([id, label]) => (
+          <button key={id} className={tab === id ? 'active' : ''} onClick={() => setTab(id)}>
+            {label}
+            {id === 'dashboard' && pending.length > 0 && (
+              <span className="tab-badge">{pending.length}</span>
+            )}
+          </button>
+        ))}
       </div>
 
-      <DocumentsPanel courseId={course.id} />
-      <InstructorLive courseId={course.id} />
-      <AttendanceSummary courseId={course.id} />
-      <Announcements courseId={course.id} isOwner />
+      <div className="course-tab-body">
+        {tab === 'dashboard' && (
+          <>
+            <div className="course-card__requests">
+              <div className="course-card__requests-label">
+                Enrollment requests ({pending.length})
+              </div>
+              {pending.length === 0 ? (
+                <p className="courses__empty">No pending requests.</p>
+              ) : (
+                pending.map((e) => (
+                  <div key={e.id} className="req-row">
+                    <span className="req-row__who">
+                      {e.student?.name} · {e.student?.email}
+                    </span>
+                    <div className="req-row__actions">
+                      <button className="btn btn--primary" onClick={() => decide(e.id, 'approved')}>
+                        Approve
+                      </button>
+                      <button className="btn btn--ghost" onClick={() => decide(e.id, 'rejected')}>
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <CourseDashboard courseId={course.id} />
+          </>
+        )}
+        {tab === 'content' && <DocumentsPanel courseId={course.id} />}
+        {tab === 'live' && <InstructorLive courseId={course.id} />}
+        {tab === 'attendance' && <AttendanceSummary courseId={course.id} />}
+        {tab === 'announcements' && <Announcements courseId={course.id} isOwner />}
+      </div>
     </div>
   )
 }
@@ -333,7 +359,7 @@ function StudentCourses() {
 }
 
 function StudentCourseCard({ course }) {
-  const [open, setOpen] = useState(false)
+  const [tab, setTab] = useState('ask')
   return (
     <div className="card course-card">
       <div className="course-card__head">
@@ -341,13 +367,27 @@ function StudentCourseCard({ course }) {
           <div className="course-card__name">{course.name}</div>
           <div className="course-card__code">{course.code}</div>
         </div>
-        <button className="btn btn--primary" onClick={() => setOpen((o) => !o)}>
-          {open ? 'Close' : 'Ask the AI'}
+      </div>
+
+      {/* The live banner + poll appear here whenever the class is in session, on any tab. */}
+      <StudentLive courseId={course.id} />
+
+      <div className="course-tabs" role="tablist">
+        <button className={tab === 'ask' ? 'active' : ''} onClick={() => setTab('ask')}>
+          Ask the AI
+        </button>
+        <button
+          className={tab === 'announcements' ? 'active' : ''}
+          onClick={() => setTab('announcements')}
+        >
+          Announcements
         </button>
       </div>
-      <StudentLive courseId={course.id} />
-      <Announcements courseId={course.id} isOwner={false} />
-      {open && <CourseChat courseId={course.id} />}
+
+      <div className="course-tab-body">
+        {tab === 'ask' && <CourseChat courseId={course.id} />}
+        {tab === 'announcements' && <Announcements courseId={course.id} isOwner={false} />}
+      </div>
     </div>
   )
 }
