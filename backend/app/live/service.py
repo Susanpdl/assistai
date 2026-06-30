@@ -95,8 +95,13 @@ def results_update_msg(activity_id, tallies: dict, total: int, *, audience: str)
     }
 
 
-def poll_revealed_msg(activity_id) -> dict:
-    return {"type": "poll_revealed", "audience": "all", "activity_id": str(activity_id)}
+def poll_revealed_msg(activity_id, correct_option: str | None = None) -> dict:
+    return {
+        "type": "poll_revealed",
+        "audience": "all",
+        "activity_id": str(activity_id),
+        "correct_option": correct_option,
+    }
 
 
 def session_ended_msg() -> dict:

@@ -79,6 +79,9 @@ class Activity(Base, TimestampMixin):
     question: Mapped[str] = mapped_column(Text, nullable=False)
     # The answer choices, stored as a JSON array of strings.
     options: Mapped[list] = mapped_column(JSONB, nullable=False)
+    # The correct option (one of `options`), if the instructor marked one. Hidden from
+    # students until the poll is revealed. Null = opinion poll with no right answer.
+    correct_option: Mapped[str | None] = mapped_column(String(500), nullable=True)
     # Whether the instructor has revealed live results to students yet.
     revealed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 

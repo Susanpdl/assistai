@@ -57,6 +57,10 @@ connection that stays open both ways, unlike a normal request that closes after 
   (tallies to the instructor until reveal), one-answer-per-student enforcement, and the
   `/courses/{id}/sessions`, `/sessions/{id}/end`, `/sessions/{id}/activities`, `/activities/{id}/reveal`,
   `/activities/{id}/results` API. Tests: `testing/live-sessions-polls.md` (4 new, 37 total).
+- ✅ **Correct answers (post-pilot fix):** a poll may carry an optional `correct_option`. The
+  instructor marks it when composing the poll; it's **hidden from students** in `poll_pushed` and
+  delivered only on `poll_revealed`, where the student sees which option was right (and whether they
+  got it). Opinion polls (no correct answer) still work — `correct_option` is optional.
 - ⏳ **Deferred:** a course-level "class is live" push to students who aren't yet in the room (they
   currently poll `GET /courses/{id}/sessions/active`); quizzes stay out of live mode by design — a
   student asks the AI tutor for a quiz from the course materials instead (per the open question).

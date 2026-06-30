@@ -140,6 +140,41 @@ def test_poll_push_and_aggregate_and_reveal(monkeypatch, sender):
             assert shown["tallies"]["Priority"] == 1
 
 
+def test_correct_answer_hidden_until_reveal(monkeypatch, sender):
+    instr = _instructor(monkeypatch, sender)
+    course = _make_course(instr)
+    c1 = _approved_student(instr, sender, course)
+    sid = instr.post(f"/courses/{course['id']}/sessions").json()["id"]
+
+    with TestClient(app) as wsc:
+        with _ws(wsc, sid, c1) as sw1:
+            _read_until(sw1, "session_state")
+            instr.post(
+                f"/sessions/{sid}/activities",
+                json={"question": "2+2?", "options": ["3", "4", "5"], "correct_option": "4"},
+            )
+            pushed = _read_until(sw1, "poll_pushed")
+            # The student is NOT told the correct answer when the poll arrives.
+            assert "correct_option" not in pushed["activity"]
+            poll_id = pushed["activity"]["id"]
+
+            # Only on reveal does the correct answer reach the student.
+            instr.post(f"/activities/{poll_id}/reveal")
+            revealed = _read_until(sw1, "poll_revealed")
+            assert revealed["correct_option"] == "4"
+
+
+def test_correct_option_must_be_an_option(monkeypatch, sender):
+    instr = _instructor(monkeypatch, sender)
+    course = _make_course(instr)
+    sid = instr.post(f"/courses/{course['id']}/sessions").json()["id"]
+    resp = instr.post(
+        f"/sessions/{sid}/activities",
+        json={"question": "q", "options": ["A", "B"], "correct_option": "Z"},
+    )
+    assert resp.status_code == 422
+
+
 def test_non_enrolled_cannot_join(monkeypatch, sender):
     instr = _instructor(monkeypatch, sender)
     course = _make_course(instr)

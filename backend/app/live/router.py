@@ -37,7 +37,7 @@ def _session_out(s: Session) -> SessionOut:
 def _activity_out(a: Activity) -> ActivityOut:
     return ActivityOut(
         id=a.id, session_id=a.session_id, question=a.question,
-        options=list(a.options), revealed=a.revealed,
+        options=list(a.options), correct_option=a.correct_option, revealed=a.revealed,
     )
 
 
@@ -121,9 +121,12 @@ def push_poll(
         raise HTTPException(status_code=409, detail="Session is not live")
     if len(payload.options) < 2:
         raise HTTPException(status_code=422, detail="A poll needs at least two options")
+    if payload.correct_option is not None and payload.correct_option not in payload.options:
+        raise HTTPException(status_code=422, detail="correct_option must be one of the options")
     activity = Activity(
         session_id=s.id, type=ActivityType.poll,
-        question=payload.question, options=payload.options, revealed=False,
+        question=payload.question, options=payload.options,
+        correct_option=payload.correct_option, revealed=False,
     )
     db.add(activity)
     db.commit()
@@ -143,7 +146,10 @@ def reveal_poll(
     db.commit()
     db.refresh(activity)
     tallies, total = service.tally(db, activity)
-    publish_sync(str(activity.session_id), service.poll_revealed_msg(activity.id))
+    publish_sync(
+        str(activity.session_id),
+        service.poll_revealed_msg(activity.id, activity.correct_option),
+    )
     publish_sync(
         str(activity.session_id),
         service.results_update_msg(activity.id, tallies, total, audience="all"),
