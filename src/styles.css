@@ -362,6 +362,12 @@ input, textarea { font-family: inherit; }
 }
 .poll-opt span.txt { z-index: 1; }
 .poll-opt.selected { border-color: var(--ink); background: var(--surface-2); font-weight: 500; }
+.poll-opt--correct { border-color: var(--live); background: var(--green-banner, #effaf2); }
+.poll-opt--correct .key { background: var(--live); border-color: var(--live); color: #fff; }
+.poll-opt--wrong { border-color: var(--coral, #d4504c); }
+/* Instructor poll composer: radio + option input on one row */
+.poll-opt-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.poll-opt-row > input[type='radio'] { width: 16px; height: 16px; flex-shrink: 0; }
 .poll-opt.selected .key { background: var(--ink); border-color: var(--ink); color: #fff; }
 .poll-opt:disabled { opacity: 0.55; }
 .poll-opt .check { margin-left: auto; color: var(--ink); font-weight: 600; z-index: 1; }

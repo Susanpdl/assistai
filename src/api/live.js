@@ -19,10 +19,10 @@ export const startSession = (courseId) =>
 export const endSession = (sessionId) =>
   apiFetch(`/sessions/${sessionId}/end`, { method: 'POST' }).then(json)
 
-export const pushPoll = (sessionId, question, options) =>
+export const pushPoll = (sessionId, question, options, correctOption) =>
   apiFetch(`/sessions/${sessionId}/activities`, {
     method: 'POST',
-    body: JSON.stringify({ question, options }),
+    body: JSON.stringify({ question, options, correct_option: correctOption ?? null }),
   }).then(json)
 
 export const revealPoll = (activityId) =>

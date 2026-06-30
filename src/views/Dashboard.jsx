@@ -1,7 +1,8 @@
 // Phase 8 — real instructor dashboard for a course: stat cards + escalated questions
 // with a "send answer to the student" action.
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import * as api from '../api/dashboard.js'
+import { usePoll } from '../hooks.js'
 
 export default function CourseDashboard({ courseId }) {
   const [stats, setStats] = useState(null)
@@ -12,9 +13,7 @@ export default function CourseDashboard({ courseId }) {
     api.listEscalations(courseId).then(setEscalations).catch(() => {})
   }, [courseId])
 
-  useEffect(() => {
-    load()
-  }, [load])
+  usePoll(load, 7000) // live stats + new escalations without a reload
 
   const open = escalations.filter((e) => e.status === 'needs')
 

@@ -2,12 +2,14 @@
 // Instructors create courses + approve/reject requests; students join by code.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthContext.jsx'
+import { usePoll } from '../hooks.js'
 import * as api from '../api/courses.js'
 import * as content from '../api/content.js'
 import * as tutor from '../api/tutor.js'
 import { InstructorLive, StudentLive } from './Live.jsx'
 import Announcements from './Announcements.jsx'
 import CourseDashboard from './Dashboard.jsx'
+import AttendanceSummary from './AttendanceSummary.jsx'
 
 export default function CoursesView() {
   const { user } = useAuth()
@@ -80,9 +82,7 @@ function InstructorCourseCard({ course }) {
     async () => setPending(await api.listEnrollments(course.id, 'pending')),
     [course.id],
   )
-  useEffect(() => {
-    loadPending()
-  }, [loadPending])
+  usePoll(loadPending, 5000) // pick up new join requests without a reload
 
   async function decide(enrollmentId, decision) {
     await api.decide(enrollmentId, decision)
@@ -129,6 +129,7 @@ function InstructorCourseCard({ course }) {
 
       <DocumentsPanel courseId={course.id} />
       <InstructorLive courseId={course.id} />
+      <AttendanceSummary courseId={course.id} />
       <Announcements courseId={course.id} isOwner />
     </div>
   )
@@ -278,9 +279,7 @@ function StudentCourses() {
   const [status, setStatus] = useState(null) // { type: 'ok' | 'err', msg }
 
   const load = useCallback(async () => setCourses(await api.listCourses()), [])
-  useEffect(() => {
-    load()
-  }, [load])
+  usePoll(load, 5000) // reflect instructor approval without a reload
 
   async function onJoin(e) {
     e.preventDefault()

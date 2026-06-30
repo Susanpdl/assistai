@@ -1,7 +1,8 @@
 // Phase 7 — announcements feed. Instructor sees a composer + delete/moderation;
 // enrolled students read and comment.
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import * as api from '../api/announcements.js'
+import { usePoll } from '../hooks.js'
 
 export default function Announcements({ courseId, isOwner }) {
   const [items, setItems] = useState([])
@@ -11,9 +12,7 @@ export default function Announcements({ courseId, isOwner }) {
     api.list(courseId).then(setItems).catch(() => {})
   }, [courseId])
 
-  useEffect(() => {
-    load()
-  }, [load])
+  usePoll(load, 7000) // new announcements/comments appear without a reload
 
   async function postIt() {
     if (!text.trim()) return

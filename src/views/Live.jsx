@@ -23,6 +23,7 @@ export function InstructorLive({ courseId }) {
   const [revealed, setRevealed] = useState(false)
   const [question, setQuestion] = useState('')
   const [options, setOptions] = useState(['', '', '', ''])
+  const [correctIdx, setCorrectIdx] = useState(null)
   const wsRef = useRef(null)
 
   // Resume an already-running session for this course.
@@ -48,12 +49,15 @@ export function InstructorLive({ courseId }) {
   async function push() {
     const opts = options.map((o) => o.trim()).filter(Boolean)
     if (!question.trim() || opts.length < 2) return
-    const a = await live.pushPoll(session.id, question.trim(), opts)
+    const correct =
+      correctIdx != null && options[correctIdx]?.trim() ? options[correctIdx].trim() : null
+    const a = await live.pushPoll(session.id, question.trim(), opts, correct)
     setActivity(a)
     setResults({ tallies: Object.fromEntries(opts.map((o) => [o, 0])), total: 0 })
     setRevealed(false)
     setQuestion('')
     setOptions(['', '', '', ''])
+    setCorrectIdx(null)
   }
 
   async function reveal() {
@@ -96,14 +100,28 @@ export function InstructorLive({ courseId }) {
             style={{ marginBottom: 8 }}
           />
           {options.map((o, i) => (
-            <input
-              key={i}
-              placeholder={`Option ${i + 1}`}
-              value={o}
-              onChange={(e) => setOptions((os) => os.map((v, j) => (j === i ? e.target.value : v)))}
-              style={{ marginBottom: 6 }}
-            />
+            <label key={i} className="poll-opt-row">
+              <input
+                type="radio"
+                name="correct-option"
+                checked={correctIdx === i}
+                disabled={!o.trim()}
+                onChange={() => setCorrectIdx(i)}
+                title="Mark as the correct answer"
+              />
+              <input
+                placeholder={`Option ${i + 1}`}
+                value={o}
+                onChange={(e) =>
+                  setOptions((os) => os.map((v, j) => (j === i ? e.target.value : v)))
+                }
+                style={{ flex: 1 }}
+              />
+            </label>
           ))}
+          <p className="muted" style={{ fontSize: 12, margin: '2px 0 8px' }}>
+            Select a radio to mark the correct answer (optional — students see it on reveal).
+          </p>
           <button className="btn btn--primary" onClick={push}>Push to class</button>
         </div>
       )}
@@ -112,6 +130,11 @@ export function InstructorLive({ courseId }) {
         <div className="card" style={{ marginTop: 8 }}>
           <div className="poll-card__q" style={{ fontSize: 15 }}>{activity.question}</div>
           <ResultBars results={tallyToBars(activity, results)} />
+          {activity.correct_option && (
+            <p style={{ fontSize: 12.5, margin: '8px 0 0', color: 'var(--live)' }}>
+              ✓ Correct answer: <strong>{activity.correct_option}</strong>
+            </p>
+          )}
           <div className="flex between" style={{ marginTop: 12 }}>
             <span className="muted" style={{ fontSize: 12 }}>{results?.total ?? 0} responses</span>
             <div className="flex gap-sm">
@@ -137,6 +160,7 @@ export function StudentLive({ courseId }) {
   const [selected, setSelected] = useState(null)
   const [results, setResults] = useState(null)
   const [revealed, setRevealed] = useState(false)
+  const [correctOption, setCorrectOption] = useState(null)
   const wsRef = useRef(null)
 
   // Poll for a live session until one appears (then connect).
@@ -160,8 +184,11 @@ export function StudentLive({ courseId }) {
         setSelected(null)
         setResults(null)
         setRevealed(false)
-      } else if (msg.type === 'poll_revealed') setRevealed(true)
-      else if (msg.type === 'results_update') setResults(msg)
+        setCorrectOption(null)
+      } else if (msg.type === 'poll_revealed') {
+        setRevealed(true)
+        setCorrectOption(msg.correct_option)
+      } else if (msg.type === 'results_update') setResults(msg)
       else if (msg.type === 'session_ended') {
         setSession(null)
         setActivity(null)
@@ -195,21 +222,40 @@ export function StudentLive({ courseId }) {
           <div className="poll-card__body">
             <h3 className="poll-card__q">{activity.question}</h3>
             <div className="poll-options">
-              {activity.options.map((opt, i) => (
-                <button
-                  key={opt}
-                  className={`poll-opt ${selected === opt ? 'selected' : ''}`}
-                  onClick={() => answer(opt)}
-                  disabled={!!selected && selected !== opt}
-                >
-                  <span className="key">{KEYS[i]}</span>
-                  <span className="txt">{opt}</span>
-                  {selected === opt && <span className="check">✓</span>}
-                </button>
-              ))}
+              {activity.options.map((opt, i) => {
+                const isCorrect = revealed && correctOption === opt
+                const isWrongPick = revealed && selected === opt && correctOption && correctOption !== opt
+                return (
+                  <button
+                    key={opt}
+                    className={`poll-opt ${selected === opt ? 'selected' : ''}${
+                      isCorrect ? ' poll-opt--correct' : ''
+                    }${isWrongPick ? ' poll-opt--wrong' : ''}`}
+                    onClick={() => answer(opt)}
+                    disabled={!!selected && selected !== opt}
+                  >
+                    <span className="key">{KEYS[i]}</span>
+                    <span className="txt">{opt}</span>
+                    {isCorrect && <span className="check" style={{ color: 'var(--live)' }}>✓ Correct</span>}
+                    {!isCorrect && selected === opt && <span className="check">✓</span>}
+                  </button>
+                )
+              })}
             </div>
             <div className="poll-card__foot">
-              {selected ? <span className="done">✓ Answer submitted</span> : <span>Tap an option to answer</span>}
+              {revealed && correctOption ? (
+                <span className={selected === correctOption ? 'done' : ''}>
+                  {selected === correctOption
+                    ? '✓ You got it right!'
+                    : selected
+                      ? `Not quite — the answer was ${correctOption}.`
+                      : `The correct answer was ${correctOption}.`}
+                </span>
+              ) : selected ? (
+                <span className="done">✓ Answer submitted</span>
+              ) : (
+                <span>Tap an option to answer</span>
+              )}
             </div>
             {revealed && results && (
               <div style={{ marginTop: 14 }}>
@@ -253,7 +299,7 @@ function AttendanceInstructor({ sessionId }) {
         <div style={{ marginTop: 12 }}>
           {roster.rows.map((r) => (
             <div key={r.student} className="flex between" style={{ padding: '6px 0', fontSize: 13 }}>
-              <span>{r.student}</span>
+              <span>{r.name || r.student}</span>
               <span className={`status-badge ${r.status === 'present' ? 'answered' : 'needs'}`}>
                 {r.status}
               </span>

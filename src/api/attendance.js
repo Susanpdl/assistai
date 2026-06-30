@@ -27,6 +27,9 @@ export const checkin = (sessionId, code, deviceId) =>
 export const getAttendance = (sessionId) =>
   apiFetch(`/sessions/${sessionId}/attendance`).then(json)
 
+export const getSummary = (courseId) =>
+  apiFetch(`/courses/${courseId}/attendance/summary`).then(json)
+
 // A soft per-browser device id (persisted in localStorage). Sturdier in the native app.
 export function deviceId() {
   let id = localStorage.getItem('assistai_device_id')
