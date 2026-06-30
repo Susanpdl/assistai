@@ -648,6 +648,10 @@ input, textarea { font-family: inherit; }
 .course-chat .composer__inner { margin: 0; box-shadow: none; }
 .course-chat .msg { max-width: 100%; }
 
+/* Dashboard stat row (instructor course card) */
+.dash-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+.dash-stats .stat-inline { min-width: 90px; }
+
 /* Attendance rotating code (instructor projector display) */
 .attend-code {
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;

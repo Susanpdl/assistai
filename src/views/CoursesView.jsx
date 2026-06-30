@@ -7,6 +7,7 @@ import * as content from '../api/content.js'
 import * as tutor from '../api/tutor.js'
 import { InstructorLive, StudentLive } from './Live.jsx'
 import Announcements from './Announcements.jsx'
+import CourseDashboard from './Dashboard.jsx'
 
 export default function CoursesView() {
   const { user } = useAuth()
@@ -100,6 +101,8 @@ function InstructorCourseCard({ course }) {
           <code className="course-card__join-code">{course.join_code}</code>
         </div>
       </div>
+
+      <CourseDashboard courseId={course.id} />
 
       <div className="course-card__requests">
         <div className="course-card__requests-label">Pending requests ({pending.length})</div>
