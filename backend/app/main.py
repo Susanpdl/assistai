@@ -18,6 +18,7 @@ from app.auth.router import router as auth_router
 from app.config import settings
 from app.content.router import router as content_router
 from app.courses.router import router as courses_router
+from app.dashboard.router import router as dashboard_router
 from app.db import engine
 from app.live.manager import manager
 from app.live.router import router as live_router
@@ -52,6 +53,7 @@ app.include_router(live_router)
 app.include_router(live_ws_router)
 app.include_router(attendance_router)
 app.include_router(announcements_router)
+app.include_router(dashboard_router)
 
 
 @app.get("/health")
