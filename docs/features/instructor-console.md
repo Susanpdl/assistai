@@ -38,9 +38,14 @@ the producers first, then the summary.)*
 - All endpoints owner-scoped (an instructor sees only their course's data).
 
 ## Status
-- ✅ Done: full UI prototype (mock data) — dashboard, escalations list, roster, upload box, live
-  controls, sub-navigation.
-- ⏳ Remaining: wire to real dashboard/escalation endpoints; implement "mark answered".
+- ✅ **Done (Phase 8):** `GET /courses/{id}/dashboard` (real stat counts — enrolled, pending,
+  questions today/total, escalated open/answered), `POST /escalations/{id}/answer` (close the
+  escalation **and** deliver the instructor's answer into the student's tutor chat), and the real
+  dashboard + escalation-answering UI in the instructor course card. Reuses the Phase 4 escalations
+  list. No migration (reads existing tables; writes `Message.escalation_status`). Tests:
+  `testing/instructor-console.md` (3 new, 52 total).
+- ⏳ **Deferred:** richer pilot stats (live participation %, attendance rate) can be layered on the
+  same endpoint later.
 
 ## Tests
 Log: `testing/instructor-console.md`. Key cases:

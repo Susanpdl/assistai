@@ -120,5 +120,8 @@ Phase 0 ─┬─ Phase 1 ─┬─ Phase 2 ─┬─ Phase 3 ── Phase 4 ⭐
 - ✅ **Phase 7** — Announcements & Notifications: post/list/comment, owner edit + delete + comment
   moderation, out-of-band batched email (background task + per-recipient retry) reusing the Phase 1
   email provider, instructor composer + student feed UIs.
-- ⏭️ **Next:** Phase 8 — Instructor Dashboard polish (wire the dashboard stats and escalated-questions
-  list to real data now that the features feeding them exist).
+- ✅ **Phase 8** — Instructor Dashboard polish: `GET /courses/{id}/dashboard` real stat counts +
+  `POST /escalations/{id}/answer` (close + deliver the answer into the student's chat); real dashboard
+  cards + escalation answering wired into the instructor UI.
+- ⏭️ **Next:** Phase 9 — Hardening & Mobile Prep (accessibility, performance, security review, and
+  planning the React Native/Expo client that reuses the same API).
