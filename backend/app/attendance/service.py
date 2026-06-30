@@ -9,13 +9,14 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as DbSession
 
 from app.attendance import codes
-from app.models.courses import Enrollment
+from app.models.courses import Course, Enrollment
 from app.models.enums import AttendanceStatus, EnrollmentStatus, SessionStatus
 from app.models.identity import User
 from app.models.sessions import Activity, ActivityResponse, Attendance, DeviceBinding, Session
@@ -32,7 +33,8 @@ class CheckinResult:
 
 @dataclass
 class AttendanceRow:
-    student: str  # email
+    name: str
+    email: str
     status: AttendanceStatus
     proofs: list[str]
     checked_in: bool
@@ -130,13 +132,15 @@ def roster(db: DbSession, session: Session) -> list[AttendanceRow]:
 
     rows: list[AttendanceRow] = []
     for student in students:
+        name = student.name or student.email
         a = att_by_student.get(student.id)
         if a is None:
-            rows.append(AttendanceRow(student.email, AttendanceStatus.absent, [], False, None))
+            rows.append(AttendanceRow(name, student.email, AttendanceStatus.absent, [], False, None))
             continue
         answered = student_answered(db, session.id, student.id)
         rows.append(
             AttendanceRow(
+                name,
                 student.email,
                 _status(has_poll, answered),
                 _proofs(answered),
@@ -145,6 +149,46 @@ def roster(db: DbSession, session: Session) -> list[AttendanceRow]:
             )
         )
     return rows
+
+
+@dataclass
+class SessionAttendance:
+    session_id: uuid.UUID
+    status: SessionStatus
+    date: object | None  # started_at
+    present: int
+    total: int
+    rows: list[AttendanceRow]
+
+
+# How far back to retain/show attendance (~4 months).
+ATTENDANCE_WINDOW = timedelta(days=124)
+
+
+def course_attendance(db: DbSession, course: Course) -> list[SessionAttendance]:
+    """Per-session attendance for the course, newest first, limited to the last ~4 months."""
+    cutoff = datetime.now(timezone.utc) - ATTENDANCE_WINDOW
+    sessions = db.execute(
+        select(Session)
+        .where(
+            Session.course_id == course.id,
+            Session.started_at.is_not(None),
+            Session.started_at >= cutoff,
+        )
+        .order_by(Session.started_at.desc())
+    ).scalars().all()
+
+    out: list[SessionAttendance] = []
+    for sess in sessions:
+        rows = roster(db, sess)
+        present = sum(1 for r in rows if r.status == AttendanceStatus.present)
+        out.append(
+            SessionAttendance(
+                session_id=sess.id, status=sess.status, date=sess.started_at,
+                present=present, total=len(rows), rows=rows,
+            )
+        )
+    return out
 
 
 def finalize(db: DbSession, session: Session) -> None:

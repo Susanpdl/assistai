@@ -180,6 +180,33 @@ def test_roster_and_access(monkeypatch, sender):
     assert present_student.get(f"/sessions/{sid}/attendance").status_code == 403
 
 
+def test_course_attendance_summary(monkeypatch, sender):
+    instr = _instructor(monkeypatch, sender)
+    course = _make_course(instr)
+    student, _ = _approved_student(instr, sender, course)
+
+    # Two sessions; the student checks in to both (no poll → code alone is present).
+    sid1 = _start(instr, course)
+    student.post(f"/sessions/{sid1}/attendance/checkin", json={"code": _code(instr, sid1), "device_id": "d1"})
+    instr.post(f"/sessions/{sid1}/end")
+
+    sid2 = _start(instr, course)
+    student.post(f"/sessions/{sid2}/attendance/checkin", json={"code": _code(instr, sid2), "device_id": "d1"})
+
+    summary = instr.get(f"/courses/{course['id']}/attendance/summary").json()
+    assert len(summary["sessions"]) == 2  # both within the 4-month window, newest first
+    for s in summary["sessions"]:
+        assert s["present"] == 1 and s["total"] == 1
+        assert s["date"] is not None
+        present_students = [r for r in s["students"] if r["status"] == "present"]
+        assert len(present_students) == 1
+        assert "name" in present_students[0] and "email" in present_students[0]
+
+    # A different instructor can't read it.
+    other = _instructor(monkeypatch, sender)
+    assert other.get(f"/courses/{course['id']}/attendance/summary").status_code == 403
+
+
 def test_finalize_on_session_end(monkeypatch, sender):
     instr = _instructor(monkeypatch, sender)
     course = _make_course(instr)

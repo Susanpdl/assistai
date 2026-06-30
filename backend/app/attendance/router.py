@@ -13,13 +13,18 @@ from app.attendance import codes, service
 from app.attendance.schemas import (
     AttendanceListOut,
     AttendanceRowOut,
+    AttendanceStudentOut,
     CheckinRequest,
     CheckinResponse,
     CodeOut,
+    CourseAttendanceSummaryOut,
+    SessionAttendanceOut,
 )
 from app.auth.deps import get_current_user
+from app.courses.deps import get_owned_course
 from app.db import get_db
 from app.live.service import resolve_role
+from app.models.courses import Course
 from app.models.enums import AttendanceStatus
 from app.models.identity import User
 from app.models.sessions import Session
@@ -94,7 +99,8 @@ def list_attendance(
     rows = service.roster(db, session)
     out = [
         AttendanceRowOut(
-            student=r.student,
+            name=r.name,
+            student=r.email,
             status=r.status,
             proofs=r.proofs,
             checked_in=r.checked_in,
@@ -104,3 +110,25 @@ def list_attendance(
     ]
     present = sum(1 for r in rows if r.status == AttendanceStatus.present)
     return AttendanceListOut(present=present, total=len(rows), rows=out)
+
+
+@router.get("/courses/{course_id}/attendance/summary", response_model=CourseAttendanceSummaryOut)
+def attendance_summary(
+    course: Course = Depends(get_owned_course),
+    db: DbSession = Depends(get_db),
+) -> CourseAttendanceSummaryOut:
+    """Per-session attendance for the course (names + date), last ~4 months, owner only."""
+    sessions = service.course_attendance(db, course)
+    return CourseAttendanceSummaryOut(
+        sessions=[
+            SessionAttendanceOut(
+                session_id=s.session_id, date=s.date, status=s.status.value,
+                present=s.present, total=s.total,
+                students=[
+                    AttendanceStudentOut(name=r.name, email=r.email, status=r.status)
+                    for r in s.rows
+                ],
+            )
+            for s in sessions
+        ]
+    )
